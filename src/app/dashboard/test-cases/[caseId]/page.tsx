@@ -12,6 +12,7 @@ import { StatusSelect } from "./status-select";
 import { ImproveWithAi } from "./improve-with-ai";
 import { EditableTitle } from "./editable-title";
 import { ExportForClaude } from "./export-for-claude";
+import { TestWithAi } from "./test-with-ai";
 import { priorityBadgeClass, statusBadgeClass } from "@/lib/badge-variants";
 
 export default async function TestCaseDetailPage({
@@ -80,6 +81,15 @@ export default async function TestCaseDetailPage({
               </a>
             )}
             <ImproveWithAi testCaseId={caseId} />
+            <TestWithAi
+              testCaseId={caseId}
+              testTitle={testCase.title}
+              steps={(steps ?? []).map((s) => ({
+                step_number: s.step_number,
+                action: s.action,
+                expected_result: s.expected_result,
+              }))}
+            />
             <ExportForClaude testCaseId={caseId} />
           </div>
         </div>
