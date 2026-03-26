@@ -404,7 +404,7 @@ function CreateBugDialog({
           </Button>
         }
       />
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto" style={{ maxWidth: "900px", width: "90vw" }}>
         <form onSubmit={handleCreate}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

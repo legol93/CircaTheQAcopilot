@@ -31,6 +31,7 @@ Siempre invocar `orchestrator` primero para cualquier tarea nueva.
 **Secuencial** (esperar output antes de continuar):
 - uiux-designer → frontend-developer
 - backend-developer → edge-function-expert
+- tokenmoney → antes de cualquier nueva llamada a Claude API
 - [todos] → pr-reviewer → qa-engineer (siempre al final)
 
 ### Memoria compartida
@@ -45,3 +46,4 @@ Ninguna tarea está completa hasta que pr-reviewer emite ✅ PASS y qa-engineer 
 ```
 orchestrator → [agentes dev] → pr-reviewer (PASS) → qa-engineer (QA_PASS) → usuario
 ```
+### Token Efficiency
