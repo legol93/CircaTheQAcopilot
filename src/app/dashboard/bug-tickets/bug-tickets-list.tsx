@@ -26,6 +26,10 @@ import {
   CheckCircle2,
   Loader2,
   Trash2,
+  Sparkles,
+  Upload,
+  X,
+  Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -257,9 +261,64 @@ function CreateBugDialog({
   const [expectedResult, setExpectedResult] = useState("");
   const [labels, setLabels] = useState("");
   const [jiraKey, setJiraKey] = useState("");
+  const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
+  const [improving, setImproving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
+
+  const canImprove = title.trim().length >= 10 && stepsToReproduce.trim().length >= 20 &&
+    actualResult.trim().length >= 10 && expectedResult.trim().length >= 10;
+
+  async function handleImproveWithAI() {
+    if (!canImprove) return;
+    setImproving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/ai/improve-bug-ticket", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          stepsToReproduce: stepsToReproduce.trim(),
+          actualResult: actualResult.trim(),
+          expectedResult: expectedResult.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "AI improvement failed");
+      }
+      const data = await res.json();
+      if (data.title) setTitle(data.title);
+      if (data.stepsToReproduce) setStepsToReproduce(data.stepsToReproduce);
+      if (data.actualResult) setActualResult(data.actualResult);
+      if (data.expectedResult) setExpectedResult(data.expectedResult);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "AI improvement failed");
+    } finally {
+      setImproving(false);
+    }
+  }
+
+  function handleFileDrop(e: React.DragEvent) {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files).filter((f) =>
+      ["image/png", "image/jpeg", "image/webp", "image/gif"].includes(f.type) && f.size <= 10 * 1024 * 1024
+    );
+    setEvidenceFiles((prev) => [...prev, ...files]);
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []).filter((f) =>
+      ["image/png", "image/jpeg", "image/webp", "image/gif"].includes(f.type) && f.size <= 10 * 1024 * 1024
+    );
+    setEvidenceFiles((prev) => [...prev, ...files]);
+  }
+
+  function removeFile(idx: number) {
+    setEvidenceFiles((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   function resetForm() {
     setBugType("smoke_regression");
@@ -271,6 +330,7 @@ function CreateBugDialog({
     setExpectedResult("");
     setLabels("");
     setJiraKey("");
+    setEvidenceFiles([]);
     setError(null);
   }
 
@@ -344,7 +404,7 @@ function CreateBugDialog({
           </Button>
         }
       />
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleCreate}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -473,6 +533,74 @@ function CreateBugDialog({
                 rows={3}
               />
               <p className="text-xs text-muted-foreground">{expectedResult.length}/10 characters minimum</p>
+            </div>
+
+            {/* Improve with AI */}
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleImproveWithAI}
+                disabled={!canImprove || improving}
+                className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300"
+              >
+                {improving ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" />Improving...</>
+                ) : (
+                  <><Sparkles className="h-3.5 w-3.5" />Improve with AI</>
+                )}
+              </Button>
+              {!canImprove && (
+                <span className="text-xs text-muted-foreground">Fill in all required fields first</span>
+              )}
+            </div>
+
+            {/* Evidence */}
+            <div className="flex flex-col gap-1.5">
+              <Label className="font-semibold">Evidence (optional)</Label>
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleFileDrop}
+                className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border py-8 text-center transition-colors hover:border-muted-foreground/50"
+              >
+                <Upload className="h-8 w-8 text-muted-foreground/50" />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Drag & drop images, or{" "}
+                  <label className="cursor-pointer font-medium text-primary hover:underline">
+                    click to browse
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, WebP, GIF — max 10MB</p>
+              </div>
+              {evidenceFiles.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {evidenceFiles.map((file, idx) => (
+                    <div
+                      key={`${file.name}-${idx}`}
+                      className="flex items-center gap-1.5 rounded-md border bg-muted/30 px-2 py-1 text-xs"
+                    >
+                      <ImageIcon className="h-3 w-3 text-muted-foreground" />
+                      <span className="max-w-[150px] truncate">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(idx)}
+                        className="ml-1 rounded-full p-0.5 hover:bg-muted"
+                        aria-label="Remove file"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Jira Key (if related to existing ticket) */}
