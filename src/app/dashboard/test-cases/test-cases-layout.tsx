@@ -297,6 +297,7 @@ export function TestCasesLayout({
                 <TableHead>Steps</TableHead>
                 <TableHead>Source</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead className="w-32">Move to</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -351,6 +352,32 @@ export function TestCasesLayout({
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(tc.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <select
+                      defaultValue=""
+                      onChange={async (e) => {
+                        const newSuiteId = e.target.value;
+                        if (!newSuiteId) return;
+                        const supabase = (await import("@/lib/supabase/client")).createClient();
+                        await supabase.from("test_cases").update({ suite_id: newSuiteId }).eq("id", tc.id);
+                        window.location.reload();
+                      }}
+                      className="h-7 w-full rounded-md border border-input bg-background px-2 text-xs"
+                      aria-label="Move to folder"
+                    >
+                      <option value="" disabled>Move...</option>
+                      {folders.map((f) => (
+                        <option key={f.id} value={f.id} disabled={f.id === tc.suite_id}>
+                          📁 {f.name}
+                        </option>
+                      ))}
+                      {sprints.map((s) => (
+                        <option key={s.id} value={s.id} disabled={s.id === tc.suite_id}>
+                          📅 {s.name}
+                        </option>
+                      ))}
+                    </select>
                   </TableCell>
                 </TableRow>
               ))}
