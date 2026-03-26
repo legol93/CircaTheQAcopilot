@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -165,10 +166,10 @@ export function BugTicketsList({ projectId }: BugTicketsListProps) {
           </div>
         ) : (
           filtered.map((ticket) => (
+            <Link key={ticket.id} href={`/dashboard/bug-tickets/${ticket.id}`}>
             <Card
-              key={ticket.id}
               className={cn(
-                "border-l-4 transition-all hover:shadow-sm",
+                "border-l-4 transition-all hover:shadow-md cursor-pointer",
                 ticket.status === "open" ? "border-l-red-400" :
                 ticket.status === "in_progress" ? "border-l-blue-400" :
                 ticket.status === "resolved" ? "border-l-emerald-400" :
@@ -235,6 +236,7 @@ export function BugTicketsList({ projectId }: BugTicketsListProps) {
                 </div>
               </CardContent>
             </Card>
+            </Link>
           ))
         )}
       </div>
