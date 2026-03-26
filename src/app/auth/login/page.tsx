@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, FlaskConical } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -70,10 +70,13 @@ export default function LoginPage() {
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-indigo-50/40 to-slate-100 p-4 dark:from-slate-950 dark:via-indigo-950/20 dark:to-slate-900">
+      <Card className="w-full max-w-md shadow-lg shadow-indigo-500/5 ring-1 ring-border/60">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Circa QA Copilot</CardTitle>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <FlaskIcon className="h-6 w-6" />
+          </div>
+          <CardTitle className="text-2xl font-bold tracking-tight">Circa QA Copilot</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>
@@ -143,6 +146,10 @@ export default function LoginPage() {
       </Card>
     </div>
   );
+}
+
+function FlaskIcon({ className }: { className?: string }) {
+  return <FlaskConical className={className} />;
 }
 
 function GitHubIcon() {

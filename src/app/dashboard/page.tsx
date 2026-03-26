@@ -31,30 +31,42 @@ export default async function DashboardPage() {
       value: caseCount ?? 0,
       icon: FileText,
       href: "/dashboard/test-cases",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      borderColor: "border-l-indigo-500",
+      bgIcon: "bg-indigo-50 dark:bg-indigo-950/50",
     },
     {
       title: "Test Runs",
       value: runCount ?? 0,
       icon: PlayCircle,
       href: "/dashboard/runs",
+      iconColor: "text-blue-600 dark:text-blue-400",
+      borderColor: "border-l-blue-500",
+      bgIcon: "bg-blue-50 dark:bg-blue-950/50",
     },
     {
       title: "Passed",
       value: passedCount ?? 0,
       icon: CheckCircle,
       href: "/dashboard/runs",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      borderColor: "border-l-emerald-500",
+      bgIcon: "bg-emerald-50 dark:bg-emerald-950/50",
     },
     {
       title: "Failed",
       value: failedCount ?? 0,
       icon: XCircle,
       href: "/dashboard/runs",
+      iconColor: "text-red-600 dark:text-red-400",
+      borderColor: "border-l-red-500",
+      bgIcon: "bg-red-50 dark:bg-red-950/50",
     },
   ];
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Dashboard</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
       <p className="mt-1 text-muted-foreground">
         Overview of your testing activity
       </p>
@@ -62,15 +74,17 @@ export default async function DashboardPage() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Link key={stat.title} href={stat.href}>
-            <Card className="transition-colors hover:bg-muted/50">
+            <Card className={`border-l-4 ${stat.borderColor} transition-all duration-200 hover:shadow-md hover:-translate-y-0.5`}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <stat.icon className="h-4 w-4 text-muted-foreground" />
+                <div className={`rounded-lg p-2 ${stat.bgIcon}`}>
+                  <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-3xl font-bold tracking-tight">{stat.value}</div>
               </CardContent>
             </Card>
           </Link>

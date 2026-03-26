@@ -47,16 +47,16 @@ function Breadcrumbs() {
   });
 
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm">
+    <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
       {crumbs.map((crumb, i) => (
-        <span key={crumb.href} className="flex items-center gap-1">
-          {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+        <span key={crumb.href} className="flex items-center gap-1.5">
+          {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground/60" />}
           {crumb.isLast ? (
-            <span className="font-semibold text-foreground">{crumb.label}</span>
+            <span className="font-semibold tracking-tight text-foreground">{crumb.label}</span>
           ) : (
             <Link
               href={crumb.href}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="font-medium text-muted-foreground hover:text-foreground transition-colors duration-150"
             >
               {crumb.label}
             </Link>
@@ -88,7 +88,7 @@ export function Header({ email }: HeaderProps) {
     .toUpperCase();
 
   return (
-    <header className="flex h-14 items-center justify-between border-b px-6">
+    <header className="flex h-12 items-center justify-between border-b border-border/60 px-6">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -105,8 +105,8 @@ export function Header({ email }: HeaderProps) {
         <DropdownMenuTrigger
           render={
             <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="User menu">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>{initials}</AvatarFallback>
+              <Avatar className="h-8 w-8 ring-2 ring-primary/15">
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">{initials}</AvatarFallback>
               </Avatar>
             </Button>
           }

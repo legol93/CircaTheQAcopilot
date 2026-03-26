@@ -41,7 +41,7 @@ export function NavItems({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-1">
+      <div className="flex flex-1 flex-col gap-0.5">
         {navigation.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -52,30 +52,30 @@ export function NavItems({ onNavigate }: { onNavigate?: () => void }) {
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-primary/10 text-primary before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[3px] before:rounded-full before:bg-primary"
+                  : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-primary")} />
               {item.name}
             </Link>
           );
         })}
       </div>
-      <Separator />
+      <Separator className="my-2" />
       <Link
         href="/dashboard/settings"
         onClick={onNavigate}
         className={cn(
-          "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+          "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
           pathname === "/dashboard/settings"
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            ? "bg-primary/10 text-primary before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[3px] before:rounded-full before:bg-primary"
+            : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
         )}
       >
-        <Settings className="h-4 w-4" />
+        <Settings className={cn("h-4 w-4 shrink-0", pathname === "/dashboard/settings" && "text-primary")} />
         Settings
       </Link>
     </>
@@ -84,14 +84,16 @@ export function NavItems({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar() {
   return (
-    <aside className="hidden w-64 shrink-0 border-r bg-muted/40 md:block">
-      <div className="flex h-14 items-center border-b px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <FlaskConical className="h-5 w-5" />
-          <span>Circa QA</span>
+    <aside className="hidden w-64 shrink-0 border-r border-border/60 bg-sidebar md:block">
+      <div className="flex h-14 items-center border-b border-border/60 px-6">
+        <Link href="/dashboard" className="flex items-center gap-2.5 font-bold tracking-tight">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <FlaskConical className="h-4 w-4" />
+          </div>
+          <span className="text-foreground">Circa QA</span>
         </Link>
       </div>
-      <nav aria-label="Main navigation" className="flex h-[calc(100vh-3.5rem)] flex-col justify-between p-4">
+      <nav aria-label="Main navigation" className="flex h-[calc(100vh-3.5rem)] flex-col justify-between p-3">
         <NavItems />
       </nav>
     </aside>
@@ -108,15 +110,17 @@ export function MobileSidebar({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-64 p-0">
-        <SheetHeader className="border-b px-6">
+        <SheetHeader className="border-b border-border/60 px-6">
           <SheetTitle>
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-              <FlaskConical className="h-5 w-5" />
+            <Link href="/dashboard" className="flex items-center gap-2.5 font-bold tracking-tight">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <FlaskConical className="h-4 w-4" />
+              </div>
               <span>Circa QA</span>
             </Link>
           </SheetTitle>
         </SheetHeader>
-        <nav aria-label="Mobile navigation" className="flex flex-1 flex-col justify-between p-4">
+        <nav aria-label="Mobile navigation" className="flex flex-1 flex-col justify-between p-3">
           <NavItems onNavigate={() => onOpenChange(false)} />
         </nav>
       </SheetContent>

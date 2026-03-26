@@ -126,22 +126,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // 8. Log in ai_prompts_log
-    const { error: logError } = await supabase
+    // 8. Log in ai_prompts_log (non-critical)
+    await supabase
       .from("ai_prompts_log")
       .insert({
         user_id: user.id,
-        action: "generate_test_case",
-        source_ticket_id: pendingTicketId,
-        generated_test_case_id: testCase.id,
-        model: "claude-sonnet-4-5-20250514",
-        tokens_used: null, // Could be enriched later with usage data
+        project_id: ticket.project_id,
+        prompt: `Generate test case for ${ticket.jira_issue_key}: ${ticket.title}`,
+        response: JSON.stringify(generated),
+        model: "claude-haiku-4-5-20251001",
+        tokens_used: null,
+      })
+      .then(({ error: logError }) => {
+        if (logError) console.error("Failed to log AI prompt:", logError.message);
       });
-
-    if (logError) {
-      // Non-critical — log but do not fail the request
-      console.error("Failed to log AI prompt:", logError.message);
-    }
 
     // 9. Return success
     return NextResponse.json({ testCaseId: testCase.id }, { status: 201 });

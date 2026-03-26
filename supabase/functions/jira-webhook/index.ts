@@ -37,8 +37,24 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Missing secret" });
     }
 
-    // ── 2. Parse body ─────────────────────────────────────────────
-    const payload = await req.json();
+    // ── 2. Parse body (sanitize control characters that Jira may send) ──
+    const rawText = await req.text();
+    // Remove control characters (except \n, \r, \t) that break JSON.parse
+    const sanitized = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(sanitized);
+    } catch (parseErr) {
+      console.error("[jira-webhook] JSON parse error after sanitization:", parseErr);
+      // Try more aggressive cleanup: replace all control chars including newlines inside strings
+      const aggressive = rawText.replace(/[\x00-\x1F\x7F]/g, " ");
+      try {
+        payload = JSON.parse(aggressive);
+      } catch {
+        console.error("[jira-webhook] Could not parse payload even after aggressive cleanup");
+        return jsonResponse({ error: "Invalid JSON payload" });
+      }
+    }
 
     // ── 3. Filter: only status changes to "IN DEV ENV'T" ─────────
     const changelogItems: Array<{

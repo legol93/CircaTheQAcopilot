@@ -16,11 +16,13 @@ const SUPABASE_FUNCTIONS_URL =
 
 const CreateConnectionSchema = z.object({
   projectId: z.string().uuid("Invalid projectId"),
-  jiraBaseUrl: z.string().url("Invalid Jira base URL"),
-  jiraProjectKey: z
+  siteUrl: z.string().url("Invalid Jira site URL"),
+  projectKey: z
     .string()
     .min(1, "Jira project key is required")
     .max(20, "Jira project key is too long"),
+  apiEmail: z.string().email("Invalid email").optional(),
+  apiToken: z.string().optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -102,7 +104,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { projectId, jiraBaseUrl, jiraProjectKey } = parsed.data;
+    const { projectId, siteUrl, projectKey, apiEmail, apiToken } = parsed.data;
 
     // Generate a unique webhook secret
     const webhookSecret = crypto.randomUUID();
@@ -121,8 +123,10 @@ export async function POST(request: Request) {
       const { data: updated, error: updateError } = await supabase
         .from("jira_connections")
         .update({
-          jira_base_url: jiraBaseUrl,
-          jira_project_key: jiraProjectKey,
+          site_url: siteUrl,
+          jira_project_key: projectKey,
+          api_email: apiEmail || null,
+          api_token: apiToken || null,
           webhook_secret: webhookSecret,
           updated_at: new Date().toISOString(),
         })
@@ -148,8 +152,10 @@ export async function POST(request: Request) {
         .from("jira_connections")
         .insert({
           project_id: projectId,
-          jira_base_url: jiraBaseUrl,
-          jira_project_key: jiraProjectKey,
+          site_url: siteUrl,
+          jira_project_key: projectKey,
+          api_email: apiEmail || null,
+          api_token: apiToken || null,
           webhook_secret: webhookSecret,
           created_by: user.id,
         })

@@ -67,7 +67,7 @@ ${description}
 Generate a test case.`;
 
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-5-20250514",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 2000,
     temperature: 0.3,
     system: SYSTEM_PROMPT,
@@ -80,7 +80,11 @@ Generate a test case.`;
     throw new Error("No text response from Claude");
   }
 
-  const rawText = textBlock.text.trim();
+  // Strip markdown code fences if present (```json ... ```)
+  let rawText = textBlock.text.trim();
+  if (rawText.startsWith("```")) {
+    rawText = rawText.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+  }
 
   // Parse the JSON response
   let parsed: unknown;

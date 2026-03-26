@@ -10,10 +10,10 @@ import { Copy, Check, Loader2 } from "lucide-react";
 interface JiraConnection {
   id: string;
   site_url: string;
-  project_key: string;
-  api_email: string;
-  api_token: string;
-  webhook_secret: string;
+  jira_project_key: string;
+  api_email: string | null;
+  api_token: string | null;
+  webhook_secret: string | null;
 }
 
 interface JiraSettingsFormProps {
@@ -26,9 +26,9 @@ export function JiraSettingsForm({
   projectId,
 }: JiraSettingsFormProps) {
   const [siteUrl, setSiteUrl] = useState(connection?.site_url ?? "");
-  const [projectKey, setProjectKey] = useState(connection?.project_key ?? "");
+  const [projectKey, setProjectKey] = useState(connection?.jira_project_key ?? "");
   const [apiEmail, setApiEmail] = useState(connection?.api_email ?? "");
-  const [apiToken, setApiToken] = useState(connection?.api_token ?? "");
+  const [apiToken, setApiToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

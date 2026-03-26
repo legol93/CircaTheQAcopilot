@@ -93,9 +93,9 @@ export function TestCasesLayout({
     <div className="flex h-full gap-0 -m-6">
       {/* Left Panel */}
       {panelOpen && (
-        <div className="w-72 shrink-0 border-r bg-muted/30 overflow-y-auto">
-          <div className="flex items-center justify-between border-b px-4 py-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <div className="w-72 shrink-0 border-r border-border/60 bg-sidebar overflow-y-auto">
+          <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Test Cases
             </h2>
             <Button
@@ -114,17 +114,17 @@ export function TestCasesLayout({
             <Link
               href="/dashboard/test-cases"
               className={cn(
-                "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
+                "relative flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all duration-150",
                 !activeSuiteId
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-foreground hover:bg-muted"
+                  ? "bg-primary/8 text-primary font-medium before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[3px] before:rounded-full before:bg-primary"
+                  : "text-foreground hover:bg-muted/80"
               )}
             >
               <span className="flex items-center gap-2">
-                <FolderOpen className="h-4 w-4" />
+                <FolderOpen className={cn("h-4 w-4", !activeSuiteId && "text-primary")} />
                 All Test Cases
               </span>
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                 {totalCount}
               </span>
             </Link>
@@ -161,20 +161,20 @@ export function TestCasesLayout({
                         key={folder.id}
                         href={`/dashboard/test-cases?suite=${folder.id}`}
                         className={cn(
-                          "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
+                          "relative flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all duration-150",
                           activeSuiteId === folder.id
-                            ? "bg-primary/10 text-primary font-medium"
-                            : "text-foreground hover:bg-muted"
+                            ? "bg-primary/8 text-primary font-medium before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[3px] before:rounded-full before:bg-primary"
+                            : "text-foreground hover:bg-muted/80"
                         )}
                       >
                         <span className="flex items-center gap-2 truncate">
                           <IconComponent
-                            className="h-4 w-4 shrink-0"
-                            style={{ color: folder.color ?? undefined }}
+                            className={cn("h-4 w-4 shrink-0", activeSuiteId === folder.id && "text-primary")}
+                            style={{ color: activeSuiteId !== folder.id ? (folder.color ?? undefined) : undefined }}
                           />
                           <EditableSuiteName suiteId={folder.id} name={folder.name} />
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                           {folder.count}
                         </span>
                       </Link>
@@ -209,17 +209,17 @@ export function TestCasesLayout({
                       key={sprint.id}
                       href={`/dashboard/test-cases?suite=${sprint.id}`}
                       className={cn(
-                        "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
+                        "relative flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all duration-150",
                         activeSuiteId === sprint.id
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-foreground hover:bg-muted"
+                          ? "bg-primary/8 text-primary font-medium before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[3px] before:rounded-full before:bg-primary"
+                          : "text-foreground hover:bg-muted/80"
                       )}
                     >
                       <span className="flex items-center gap-2 truncate">
-                        <CalendarDays className="h-4 w-4 shrink-0" />
+                        <CalendarDays className={cn("h-4 w-4 shrink-0", activeSuiteId === sprint.id && "text-primary")} />
                         <EditableSuiteName suiteId={sprint.id} name={sprint.name} />
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                         {sprint.count}
                       </span>
                     </Link>
@@ -238,7 +238,7 @@ export function TestCasesLayout({
 
       {/* Right Panel - Test Cases Table */}
       <div className="flex-1 overflow-y-auto">
-        <div className="flex items-center justify-between border-b px-6 py-3">
+        <div className="flex items-center justify-between border-b border-border/60 px-6 py-3">
           <div className="flex items-center gap-2">
             {!panelOpen && (
               <Button
@@ -251,7 +251,7 @@ export function TestCasesLayout({
                 <PanelLeft className="h-4 w-4" />
               </Button>
             )}
-            <h2 className="text-lg font-semibold">{activeSuiteName}</h2>
+            <h2 className="text-lg font-semibold tracking-tight">{activeSuiteName}</h2>
             <span className="text-sm text-muted-foreground">
               ({testCases.length})
             </span>
@@ -303,7 +303,7 @@ export function TestCasesLayout({
               {testCases.map((tc) => (
                 <TableRow
                   key={tc.id}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer transition-colors duration-100 hover:bg-muted/60"
                   onClick={() => (window.location.href = `/dashboard/test-cases/${tc.id}`)}
                 >
                   <TableCell className="font-mono text-xs text-muted-foreground">
