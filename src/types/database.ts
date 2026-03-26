@@ -133,36 +133,3 @@ export interface AiPromptLog {
   tokens_used: number | null;
   created_at: string;
 }
-
-// Daily Executions
-export type ExecutionSource = "manual" | "ci" | "import";
-export type ExecutionEnvironment = "DEV" | "QA" | "STAGING" | "PROD";
-export type ExecutionRunType = "scheduled" | "manual";
-export type ExecutionResult = "passed" | "failed" | "flaky" | "skipped" | "not_run";
-
-export interface DailyExecutionRun {
-  id: string;
-  project_id: string;
-  run_date: string;
-  created_by: string;
-  notes: string | null;
-  source: ExecutionSource;
-  environment: ExecutionEnvironment;
-  run_type: ExecutionRunType;
-  summary_json: { passed: number; failed: number; flaky: number; skipped: number; total: number } | null;
-  report_url: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface DailyExecutionResult {
-  id: string;
-  run_id: string;
-  test_case_id: string;
-  result: ExecutionResult;
-  comment: string | null;
-  duration_ms: number | null;
-  error_summary: string | null;
-  created_at: string;
-  updated_at: string;
-}
