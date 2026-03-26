@@ -19,30 +19,23 @@ export default async function TestCasesPage({
     redirect("/auth/login");
   }
 
-  // Get current user's project (for now, use the first project)
-  const { data: project, error: projectError } = await supabase
+  // Auto-create default project if none exists (invisible to user)
+  let { data: project } = await supabase
     .from("projects")
     .select("id")
     .limit(1)
     .single();
 
-  if (projectError || !project) {
-    // No project found — render with empty state
-    return (
-      <TestCasesLayout
-        projectId={null}
-        totalCount={0}
-        uncategorizedCount={0}
-        folders={[]}
-        sprints={[]}
-        testCases={[]}
-        activeSuiteId={null}
-        activeSuiteName="All Test Cases"
-      />
-    );
+  if (!project) {
+    const { data: newProject } = await supabase
+      .from("projects")
+      .insert({ name: "Default", created_by: user.id })
+      .select("id")
+      .single();
+    project = newProject;
   }
 
-  const projectId = project.id;
+  const projectId = project!.id;
 
   // Get all test cases count scoped to project
   const { count: totalCount } = await supabase

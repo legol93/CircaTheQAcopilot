@@ -54,7 +54,7 @@ interface TestCase {
 }
 
 interface TestCasesLayoutProps {
-  projectId: string | null;
+  projectId: string;
   totalCount: number;
   uncategorizedCount: number;
   folders: SuiteItem[];

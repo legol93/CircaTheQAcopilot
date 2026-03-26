@@ -6,29 +6,26 @@ import Link from "next/link";
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const [projectsResult, casesResult, runsResult, passedResult] =
+  const [casesResult, runsResult, passedResult, failedResult] =
     await Promise.all([
-      supabase.from("projects").select("*", { count: "exact", head: true }),
       supabase.from("test_cases").select("*", { count: "exact", head: true }),
       supabase.from("test_runs").select("*", { count: "exact", head: true }),
       supabase
         .from("test_run_results")
         .select("*", { count: "exact", head: true })
         .eq("status", "passed"),
+      supabase
+        .from("test_run_results")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "failed"),
     ]);
 
-  const projectCount = projectsResult.count;
   const caseCount = casesResult.count;
   const runCount = runsResult.count;
   const passedCount = passedResult.count;
+  const failedCount = failedResult.count;
 
   const stats = [
-    {
-      title: "Projects",
-      value: projectCount ?? 0,
-      icon: FolderKanban,
-      href: "/dashboard/test-cases",
-    },
     {
       title: "Test Cases",
       value: caseCount ?? 0,
@@ -42,9 +39,15 @@ export default async function DashboardPage() {
       href: "/dashboard/runs",
     },
     {
-      title: "Tests Passed",
+      title: "Passed",
       value: passedCount ?? 0,
       icon: CheckCircle,
+      href: "/dashboard/runs",
+    },
+    {
+      title: "Failed",
+      value: failedCount ?? 0,
+      icon: FolderKanban,
       href: "/dashboard/runs",
     },
   ];

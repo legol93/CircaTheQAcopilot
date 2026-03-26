@@ -17,7 +17,7 @@ import {
 import { Plus } from "lucide-react";
 
 interface CreateFolderDialogProps {
-  projectId: string | null;
+  projectId: string;
 }
 
 export function CreateFolderDialog({ projectId }: CreateFolderDialogProps) {
@@ -38,11 +38,6 @@ export function CreateFolderDialog({ projectId }: CreateFolderDialogProps) {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!projectId) {
-      setError("Create a project first");
-      return;
-    }
-
     const trimmedName = name.trim();
     if (!trimmedName) {
       setError("Name is required");

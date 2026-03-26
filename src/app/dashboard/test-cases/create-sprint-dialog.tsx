@@ -17,7 +17,7 @@ import {
 import { Plus } from "lucide-react";
 
 interface CreateSprintDialogProps {
-  projectId: string | null;
+  projectId: string;
 }
 
 export function CreateSprintDialog({ projectId }: CreateSprintDialogProps) {
@@ -38,11 +38,6 @@ export function CreateSprintDialog({ projectId }: CreateSprintDialogProps) {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!projectId) {
-      setError("Create a project first");
-      return;
-    }
-
     const trimmedName = name.trim();
     if (!trimmedName) {
       setError("Name is required");
