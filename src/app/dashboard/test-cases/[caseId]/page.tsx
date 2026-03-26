@@ -11,6 +11,7 @@ import { EditableCard } from "./editable-card";
 import { StatusSelect } from "./status-select";
 import { ImproveWithAi } from "./improve-with-ai";
 import { EditableTitle } from "./editable-title";
+import { ExportForClaude } from "./export-for-claude";
 import { priorityBadgeClass, statusBadgeClass } from "@/lib/badge-variants";
 
 export default async function TestCaseDetailPage({
@@ -79,6 +80,7 @@ export default async function TestCaseDetailPage({
               </a>
             )}
             <ImproveWithAi testCaseId={caseId} />
+            <ExportForClaude testCaseId={caseId} />
           </div>
         </div>
       </div>
