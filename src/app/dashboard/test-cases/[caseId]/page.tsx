@@ -4,9 +4,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles, ExternalLink } from "lucide-react";
 import { AddStepForm } from "./add-step-form";
 import { EditableStepsTable } from "./editable-steps-table";
+import { EditableCard } from "./editable-card";
+import { StatusSelect } from "./status-select";
+import { ImproveWithAi } from "./improve-with-ai";
+import { EditableTitle } from "./editable-title";
 import { priorityBadgeClass, statusBadgeClass } from "@/lib/badge-variants";
 
 export default async function TestCaseDetailPage({
@@ -31,6 +35,13 @@ export default async function TestCaseDetailPage({
     .eq("test_case_id", caseId)
     .order("step_number", { ascending: true });
 
+  // Find linked Jira ticket (if this test case was generated from Jira)
+  const { data: jiraTicket } = await supabase
+    .from("jira_pending_tickets")
+    .select("jira_issue_key, jira_url")
+    .eq("created_test_case_id", caseId)
+    .single();
+
   return (
     <div>
       <div className="flex items-center gap-3">
@@ -43,45 +54,48 @@ export default async function TestCaseDetailPage({
           <p className="text-sm text-muted-foreground">
             {(testCase.test_suites as { name: string })?.name}
           </p>
-          <h1 className="text-3xl font-bold">{testCase.title}</h1>
-          <div className="mt-2 flex items-center gap-2">
-            <Badge variant="secondary" className={priorityBadgeClass[testCase.priority]}>
-              {testCase.priority}
-            </Badge>
-            <Badge variant="secondary" className={statusBadgeClass[testCase.status]}>
-              {testCase.status}
-            </Badge>
+          <EditableTitle testCaseId={caseId} title={testCase.title} />
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <StatusSelect
+              testCaseId={caseId}
+              currentStatus={testCase.status}
+              currentPriority={testCase.priority}
+            />
             {testCase.ai_generated && (
               <Badge variant="outline" className="gap-1">
                 <Sparkles className="h-3 w-3" />
                 AI Generated
               </Badge>
             )}
+            {jiraTicket && (
+              <a
+                href={jiraTicket.jira_url ?? `https://circathera.atlassian.net/browse/${jiraTicket.jira_issue_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-900/50"
+              >
+                {jiraTicket.jira_issue_key}
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+            <ImproveWithAi testCaseId={caseId} />
           </div>
         </div>
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        {testCase.description && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm whitespace-pre-wrap">{testCase.description}</p>
-            </CardContent>
-          </Card>
-        )}
-        {testCase.preconditions && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Preconditions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm whitespace-pre-wrap">{testCase.preconditions}</p>
-            </CardContent>
-          </Card>
-        )}
+        <EditableCard
+          testCaseId={caseId}
+          field="description"
+          label="Description"
+          value={testCase.description}
+        />
+        <EditableCard
+          testCaseId={caseId}
+          field="preconditions"
+          label="Preconditions"
+          value={testCase.preconditions}
+        />
       </div>
 
       <div className="mt-6">

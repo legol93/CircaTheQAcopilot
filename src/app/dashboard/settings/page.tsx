@@ -44,6 +44,10 @@ export default async function SettingsPage() {
   const totalTokens = (aiLogs ?? []).reduce((sum, log) => sum + (log.tokens_used ?? 0), 0);
   const totalCalls = (aiLogs ?? []).length;
 
+  // Estimate cost: Haiku 4.5 = $0.80/MTok input + $4.00/MTok output
+  // Average ~$1.50/MTok for mixed workloads (test case generation is input-heavy)
+  const estimatedCost = (totalTokens / 1_000_000) * 1.5;
+
   return (
     <div>
       <h1 className="text-3xl font-bold">Settings</h1>
@@ -103,6 +107,13 @@ export default async function SettingsPage() {
           <div className="rounded-lg border bg-muted/30 px-4 py-3">
             <p className="text-sm text-muted-foreground">Total Tokens</p>
             <p className="text-2xl font-bold tracking-tight">{totalTokens.toLocaleString()}</p>
+          </div>
+          <div className="rounded-lg border bg-muted/30 px-4 py-3">
+            <p className="text-sm text-muted-foreground">Estimated Cost</p>
+            <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+              ${estimatedCost < 0.01 ? estimatedCost.toFixed(4) : estimatedCost.toFixed(2)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">~$1.50/MTok avg</p>
           </div>
         </div>
 
