@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -28,6 +28,7 @@ import {
   Trash2,
   Sparkles,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -264,14 +265,7 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
 
       {/* Content sections */}
       <div className="mt-6 grid gap-4">
-        <EditableCard
-          title="Steps to Reproduce"
-          value={ticket.steps_to_reproduce}
-          field="steps_to_reproduce"
-          onSave={(v) => saveField("steps_to_reproduce", v)}
-          placeholder="1. Navigate to...\n2. Click on...\n3. Observe..."
-          rows={5}
-        />
+        <BugStepsEditor bugTicketId={ticket.id} />
         <div className="grid gap-4 lg:grid-cols-2">
           <EditableCard
             title="Actual Result"
@@ -316,6 +310,149 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/* ─── Bug Steps Editor ───────────────────────────────────── */
+
+function BugStepsEditor({ bugTicketId }: { bugTicketId: string }) {
+  const [steps, setSteps] = useState<{ id: string; step_number: number; description: string }[]>([]);
+  const [newStep, setNewStep] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  const fetchSteps = useCallback(async () => {
+    const { data } = await supabase
+      .from("bug_ticket_steps")
+      .select("*")
+      .eq("bug_ticket_id", bugTicketId)
+      .order("step_number", { ascending: true });
+    setSteps(data ?? []);
+    setLoading(false);
+  }, [bugTicketId, supabase]);
+
+  useState(() => { fetchSteps(); });
+
+  async function addStep() {
+    const trimmed = newStep.trim();
+    if (!trimmed) return;
+    const nextNum = (steps.length > 0 ? Math.max(...steps.map((s) => s.step_number)) : 0) + 1;
+    await supabase.from("bug_ticket_steps").insert({
+      bug_ticket_id: bugTicketId,
+      step_number: nextNum,
+      description: trimmed,
+    });
+    setNewStep("");
+    fetchSteps();
+  }
+
+  async function deleteStep(stepId: string) {
+    await supabase.from("bug_ticket_steps").delete().eq("id", stepId);
+    fetchSteps();
+  }
+
+  async function saveEdit(stepId: string) {
+    const trimmed = editValue.trim();
+    if (!trimmed) return;
+    await supabase.from("bug_ticket_steps").update({ description: trimmed }).eq("id", stepId);
+    setEditingId(null);
+    fetchSteps();
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-semibold">Steps to Reproduce</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : steps.length === 0 && !newStep ? (
+          <p className="text-sm text-muted-foreground italic">No steps added yet</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {steps.map((step) => (
+              <div
+                key={step.id}
+                className="flex items-start gap-3 rounded-lg border bg-muted/20 p-3 group"
+              >
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                  {step.step_number}
+                </span>
+                {editingId === step.id ? (
+                  <div className="flex-1 flex items-start gap-2">
+                    <Input
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveEdit(step.id);
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                      autoFocus
+                      className="flex-1 text-sm"
+                    />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => saveEdit(step.id)}>
+                      <Check className="h-4 w-4 text-emerald-600" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setEditingId(null)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <p className="flex-1 text-sm pt-0.5">{step.description}</p>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => { setEditingId(step.id); setEditValue(step.description); }}
+                        aria-label="Edit step"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => deleteStep(step.id)}
+                        aria-label="Delete step"
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add new step */}
+        <div className="mt-3 flex items-center gap-2">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/30 text-xs text-muted-foreground">
+            {steps.length + 1}
+          </span>
+          <Input
+            value={newStep}
+            onChange={(e) => setNewStep(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") addStep(); }}
+            placeholder="Add a step and press Enter..."
+            className="flex-1 text-sm"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addStep}
+            disabled={!newStep.trim()}
+          >
+            <Plus className="mr-1 h-3.5 w-3.5" /> Add
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
