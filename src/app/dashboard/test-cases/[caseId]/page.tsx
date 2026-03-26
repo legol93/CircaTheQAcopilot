@@ -4,16 +4,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { AddStepForm } from "./add-step-form";
+import { EditableStepsTable } from "./editable-steps-table";
 import { priorityBadgeClass, statusBadgeClass } from "@/lib/badge-variants";
 
 export default async function TestCaseDetailPage({
@@ -95,26 +88,7 @@ export default async function TestCaseDetailPage({
         <h2 className="text-xl font-semibold">Test Steps</h2>
 
         {steps && steps.length > 0 ? (
-          <div className="mt-4 rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">#</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Expected Result</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {steps.map((step) => (
-                  <TableRow key={step.id}>
-                    <TableCell className="font-medium">{step.step_number}</TableCell>
-                    <TableCell className="whitespace-pre-wrap">{step.action}</TableCell>
-                    <TableCell className="whitespace-pre-wrap">{step.expected_result}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <EditableStepsTable steps={steps} />
         ) : (
           <p className="mt-4 text-sm text-muted-foreground">No steps defined yet.</p>
         )}
