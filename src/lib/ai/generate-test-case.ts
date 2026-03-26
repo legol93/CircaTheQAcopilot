@@ -19,7 +19,14 @@ const GeneratedTestCaseSchema = z.object({
   steps: z.array(TestStepSchema).min(3).max(8),
 });
 
-export type GeneratedTestCase = z.infer<typeof GeneratedTestCaseSchema>;
+export type GeneratedTestCase = z.infer<typeof GeneratedTestCaseSchema> & {
+  _usage?: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+    model: string;
+  };
+};
 
 // ---------------------------------------------------------------------------
 // Map Jira priority labels to our internal priority
@@ -102,9 +109,17 @@ Generate a test case.`;
     );
   }
 
-  // Override priority with mapped Jira priority (AI may have returned something else)
+  const inputTokens = response.usage?.input_tokens ?? 0;
+  const outputTokens = response.usage?.output_tokens ?? 0;
+
   return {
     ...result.data,
     priority: result.data.priority,
+    _usage: {
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      total_tokens: inputTokens + outputTokens,
+      model: "claude-haiku-4-5-20251001",
+    },
   };
 }

@@ -134,8 +134,8 @@ export async function POST(request: Request) {
         project_id: ticket.project_id,
         prompt: `Generate test case for ${ticket.jira_issue_key}: ${ticket.title}`,
         response: JSON.stringify(generated),
-        model: "claude-haiku-4-5-20251001",
-        tokens_used: null,
+        model: generated._usage?.model ?? "claude-haiku-4-5-20251001",
+        tokens_used: generated._usage?.total_tokens ?? null,
       })
       .then(({ error: logError }) => {
         if (logError) console.error("Failed to log AI prompt:", logError.message);
