@@ -67,7 +67,18 @@ export async function POST(request: Request) {
       rawText = rawText.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
     }
 
-    const improved = JSON.parse(rawText);
+    const ImprovedSchema = z.object({
+      title: z.string().min(1),
+      stepsToReproduce: z.string().min(1),
+      actualResult: z.string().min(1),
+      expectedResult: z.string().min(1),
+    });
+
+    const parsed_improved = ImprovedSchema.safeParse(JSON.parse(rawText));
+    if (!parsed_improved.success) {
+      return NextResponse.json({ error: "AI response failed validation" }, { status: 500 });
+    }
+    const improved = parsed_improved.data;
 
     // Log usage
     const totalTokens = (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0);
