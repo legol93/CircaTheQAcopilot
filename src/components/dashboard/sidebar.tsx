@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,13 @@ import {
   Workflow,
   Settings,
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -28,9 +36,53 @@ const navigation = [
   { name: "Pipeline", href: "/dashboard/pipeline", icon: Workflow },
 ];
 
-export function Sidebar() {
+export function NavItems({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
+  return (
+    <>
+      <div className="flex flex-1 flex-col gap-1">
+        {navigation.map((item) => {
+          const isActive =
+            pathname === item.href ||
+            (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={onNavigate}
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.name}
+            </Link>
+          );
+        })}
+      </div>
+      <Separator />
+      <Link
+        href="/dashboard/settings"
+        onClick={onNavigate}
+        className={cn(
+          "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+          pathname === "/dashboard/settings"
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        )}
+      >
+        <Settings className="h-4 w-4" />
+        Settings
+      </Link>
+    </>
+  );
+}
+
+export function Sidebar() {
   return (
     <aside className="hidden w-64 shrink-0 border-r bg-muted/40 md:block">
       <div className="flex h-14 items-center border-b px-6">
@@ -39,42 +91,35 @@ export function Sidebar() {
           <span>Circa QA</span>
         </Link>
       </div>
-      <nav aria-label="Main navigation" className="flex flex-1 flex-col justify-between p-4">
-        <div className="flex flex-col gap-1">
-          {navigation.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.name}
-              </Link>
-            );
-          })}
-        </div>
-        <Link
-          href="/dashboard/settings"
-          className={cn(
-            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-            pathname === "/dashboard/settings"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-        >
-          <Settings className="h-4 w-4" />
-          Settings
-        </Link>
+      <nav aria-label="Main navigation" className="flex h-[calc(100vh-3.5rem)] flex-col justify-between p-4">
+        <NavItems />
       </nav>
     </aside>
+  );
+}
+
+export function MobileSidebar({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="left" className="w-64 p-0">
+        <SheetHeader className="border-b px-6">
+          <SheetTitle>
+            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+              <FlaskConical className="h-5 w-5" />
+              <span>Circa QA</span>
+            </Link>
+          </SheetTitle>
+        </SheetHeader>
+        <nav aria-label="Mobile navigation" className="flex flex-1 flex-col justify-between p-4">
+          <NavItems onNavigate={() => onOpenChange(false)} />
+        </nav>
+      </SheetContent>
+    </Sheet>
   );
 }

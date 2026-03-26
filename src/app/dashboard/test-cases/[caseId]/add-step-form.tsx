@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { z } from "zod/v4";
@@ -24,6 +24,7 @@ export function AddStepForm({ testCaseId, nextStepNumber }: AddStepFormProps) {
   const [expectedResult, setExpectedResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [justAdded, setJustAdded] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -57,18 +58,21 @@ export function AddStepForm({ testCaseId, nextStepNumber }: AddStepFormProps) {
       setAction("");
       setExpectedResult("");
       setLoading(false);
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 1500);
       router.refresh();
     }
   }
 
   return (
-    <form onSubmit={handleAdd} className="rounded-lg border p-4">
+    <form onSubmit={handleAdd} className={`rounded-lg border p-4 transition-colors duration-500 ${justAdded ? "border-emerald-500" : ""}`}>
       <h3 className="text-sm font-medium">Add Step #{nextStepNumber}</h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
           <Label htmlFor="action">Action</Label>
-          <Input
+          <Textarea
             id="action"
+            rows={2}
             placeholder="Click the login button"
             value={action}
             onChange={(e) => setAction(e.target.value)}
@@ -77,8 +81,9 @@ export function AddStepForm({ testCaseId, nextStepNumber }: AddStepFormProps) {
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="expected">Expected Result</Label>
-          <Input
+          <Textarea
             id="expected"
+            rows={2}
             placeholder="User is redirected to dashboard"
             value={expectedResult}
             onChange={(e) => setExpectedResult(e.target.value)}

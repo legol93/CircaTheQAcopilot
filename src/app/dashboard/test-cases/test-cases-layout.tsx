@@ -28,6 +28,7 @@ import {
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
+import { priorityBadgeClass, statusBadgeClass } from "@/lib/badge-variants";
 import { CreateFolderDialog } from "./create-folder-dialog";
 import { CreateSprintDialog } from "./create-sprint-dialog";
 import { CreateTestCaseDialog } from "./create-test-case-dialog";
@@ -63,18 +64,6 @@ interface TestCasesLayoutProps {
   activeSuiteName: string;
 }
 
-const priorityColors: Record<string, string> = {
-  low: "bg-slate-100 text-slate-800",
-  medium: "bg-blue-100 text-blue-800",
-  high: "bg-orange-100 text-orange-800",
-  critical: "bg-red-100 text-red-800",
-};
-
-const statusColors: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-800",
-  active: "bg-green-100 text-green-800",
-  deprecated: "bg-yellow-100 text-yellow-800",
-};
 
 const folderIcons: Record<string, React.ElementType> = {
   zap: Zap,
@@ -277,33 +266,50 @@ export function TestCasesLayout({
         </div>
 
         {testCases.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <FlaskConical className="h-12 w-12 text-muted-foreground" />
+          <div className="mx-6 mt-6 flex flex-col items-center justify-center rounded-lg border border-dashed py-20">
+            <div className="bg-muted p-4 rounded-full">
+              <FlaskConical className="h-12 w-12 text-muted-foreground" />
+            </div>
             <h3 className="mt-4 text-lg font-semibold">No test cases</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 max-w-sm text-center text-sm text-muted-foreground">
               {activeSuiteId
-                ? "Add test cases to this folder or sprint"
-                : "Create a folder and start adding test cases"}
+                ? "Add test cases to this folder or sprint to start tracking quality."
+                : "Create a folder and start adding test cases to organize your testing."}
             </p>
+            {activeSuiteId && (
+              <div className="mt-4">
+                <CreateTestCaseDialog suiteId={activeSuiteId} />
+              </div>
+            )}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-24">ID</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Priority</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Steps</TableHead>
                 <TableHead>Source</TableHead>
+                <TableHead>Created</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {testCases.map((tc) => (
-                <TableRow key={tc.id}>
+                <TableRow
+                  key={tc.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => (window.location.href = `/dashboard/test-cases/${tc.id}`)}
+                >
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {tc.id.slice(0, 8)}
+                  </TableCell>
                   <TableCell>
                     <Link
                       href={`/dashboard/test-cases/${tc.id}`}
                       className="font-medium hover:underline"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {tc.title}
                     </Link>
@@ -311,7 +317,7 @@ export function TestCasesLayout({
                   <TableCell>
                     <Badge
                       variant="secondary"
-                      className={priorityColors[tc.priority]}
+                      className={priorityBadgeClass[tc.priority]}
                     >
                       {tc.priority}
                     </Badge>
@@ -319,7 +325,7 @@ export function TestCasesLayout({
                   <TableCell>
                     <Badge
                       variant="secondary"
-                      className={statusColors[tc.status]}
+                      className={statusBadgeClass[tc.status]}
                     >
                       {tc.status}
                     </Badge>
@@ -338,6 +344,9 @@ export function TestCasesLayout({
                         Manual
                       </span>
                     )}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(tc.created_at).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
               ))}

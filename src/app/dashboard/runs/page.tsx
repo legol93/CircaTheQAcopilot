@@ -8,13 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlayCircle } from "lucide-react";
-
-const runStatusColors: Record<string, string> = {
-  pending: "bg-gray-100 text-gray-800",
-  in_progress: "bg-blue-100 text-blue-800",
-  completed: "bg-green-100 text-green-800",
-};
+import { PlayCircle, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { runStatusBadgeClass } from "@/lib/badge-variants";
 
 export default async function TestRunsPage() {
   const supabase = await createClient();
@@ -32,12 +28,18 @@ export default async function TestRunsPage() {
       </p>
 
       {!runs || runs.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center justify-center rounded-lg border py-12">
-          <PlayCircle className="h-12 w-12 text-muted-foreground" />
+        <div className="mt-6 flex flex-col items-center justify-center rounded-lg border border-dashed py-12">
+          <div className="bg-muted p-4 rounded-full">
+            <PlayCircle className="h-12 w-12 text-muted-foreground" />
+          </div>
           <h3 className="mt-4 text-lg font-semibold">No test runs yet</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Test runs will appear here once created
+          <p className="mt-1 max-w-sm text-center text-sm text-muted-foreground">
+            Create a test run to start executing and tracking your test cases.
           </p>
+          <Button className="mt-4">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Test Run
+          </Button>
         </div>
       ) : (
         <div className="mt-6 rounded-lg border">
@@ -58,7 +60,7 @@ export default async function TestRunsPage() {
                     {(run.projects as { name: string })?.name}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={runStatusColors[run.status]}>
+                    <Badge variant="secondary" className={runStatusBadgeClass[run.status]}>
                       {run.status.replace("_", " ")}
                     </Badge>
                   </TableCell>
