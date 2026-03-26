@@ -11,6 +11,7 @@ import {
   ArrowDown,
   ArrowRight,
   GitBranch,
+  TrendingUp,
   User,
 } from "lucide-react";
 
@@ -40,6 +41,15 @@ const pipelineSteps = [
     color: "text-pink-600 dark:text-pink-400",
     bgColor: "bg-pink-50 dark:bg-pink-950/50",
     description: "Produce specs de UI si hay pantallas nuevas",
+    type: "agent" as const,
+  },
+  {
+    phase: "3b. Cost Audit (if AI involved)",
+    title: "Token Money",
+    icon: TrendingUp,
+    color: "text-green-600 dark:text-green-400",
+    bgColor: "bg-green-50 dark:bg-green-950/50",
+    description: "Audita costos de API, optimiza prompts y selecciona modelos antes de implementar",
     type: "agent" as const,
   },
   {

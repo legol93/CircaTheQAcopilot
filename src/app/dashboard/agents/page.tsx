@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Brain,
+  DollarSign,
   Palette,
   Code,
   Database,
@@ -101,6 +102,19 @@ const agents = [
     description:
       "Valida en local que los cambios realmente funcionan. Ejecuta pruebas funcionales, verifica flujos end-to-end. Emite QA_PASS o QA_FAIL con evidencia.",
     triggers: ["Después de PR Reviewer PASS", "Verificación end-to-end"],
+  },
+  {
+    name: "Token Money",
+    slug: "tokenmoney",
+    icon: DollarSign,
+    color: "text-green-600 dark:text-green-400",
+    bgColor: "bg-green-50 dark:bg-green-950/50",
+    borderColor: "border-l-green-500",
+    model: "claude-haiku-4-5",
+    role: "Cost Optimization",
+    description:
+      "Guardián del presupuesto de tokens. Audita consumo de API, optimiza prompts, selecciona modelos correctos por tarea, y reduce costos sin sacrificar calidad.",
+    triggers: ["Nueva llamada a Claude API", "Diseño de prompts", "Costo creciente", "Nuevos agentes"],
   },
 ];
 
