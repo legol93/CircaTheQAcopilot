@@ -248,24 +248,54 @@ function CreateBugDialog({
   onCreated: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [bugType, setBugType] = useState<"related_ticket" | "smoke_regression">("smoke_regression");
+  const [environment, setEnvironment] = useState("QA");
   const [severity, setSeverity] = useState("medium");
+  const [title, setTitle] = useState("");
+  const [stepsToReproduce, setStepsToReproduce] = useState("");
+  const [actualResult, setActualResult] = useState("");
+  const [expectedResult, setExpectedResult] = useState("");
+  const [labels, setLabels] = useState("");
   const [jiraKey, setJiraKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
 
+  function resetForm() {
+    setBugType("smoke_regression");
+    setEnvironment("QA");
+    setSeverity("medium");
+    setTitle("");
+    setStepsToReproduce("");
+    setActualResult("");
+    setExpectedResult("");
+    setLabels("");
+    setJiraKey("");
+    setError(null);
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = title.trim();
-    if (!trimmed) {
-      setError("Title is required");
+    setError(null);
+
+    if (title.trim().length < 10) {
+      setError("Title must be at least 10 characters");
+      return;
+    }
+    if (stepsToReproduce.trim().length < 20) {
+      setError("Steps to reproduce must be at least 20 characters");
+      return;
+    }
+    if (actualResult.trim().length < 10) {
+      setError("Actual result must be at least 10 characters");
+      return;
+    }
+    if (expectedResult.trim().length < 10) {
+      setError("Expected result must be at least 10 characters");
       return;
     }
 
     setLoading(true);
-    setError(null);
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -274,12 +304,20 @@ function CreateBugDialog({
       return;
     }
 
+    const description = `**Steps to Reproduce:**\n${stepsToReproduce.trim()}\n\n**Actual Result:**\n${actualResult.trim()}\n\n**Expected Result:**\n${expectedResult.trim()}`;
+
     const { error: insertError } = await supabase.from("bug_tickets").insert({
       project_id: projectId,
-      title: trimmed,
-      description: description.trim() || null,
+      title: title.trim(),
+      description,
+      bug_type: bugType,
+      environment,
       severity,
       status: "open",
+      steps_to_reproduce: stepsToReproduce.trim(),
+      actual_result: actualResult.trim(),
+      expected_result: expectedResult.trim(),
+      labels: labels.trim() || null,
       jira_key: jiraKey.trim() || null,
       jira_url: jiraKey.trim() ? `https://circathera.atlassian.net/browse/${jiraKey.trim()}` : null,
       created_by: user.id,
@@ -290,17 +328,14 @@ function CreateBugDialog({
       setLoading(false);
     } else {
       setOpen(false);
-      setTitle("");
-      setDescription("");
-      setSeverity("medium");
-      setJiraKey("");
+      resetForm();
       setLoading(false);
       onCreated();
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
       <DialogTrigger
         render={
           <Button>
@@ -309,35 +344,65 @@ function CreateBugDialog({
           </Button>
         }
       />
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleCreate}>
           <DialogHeader>
-            <DialogTitle>Create Bug Ticket</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Bug className="h-5 w-5" />
+              Create Bug Ticket
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Create a manual bug ticket draft that can be copied to Jira.
+            </p>
           </DialogHeader>
-          <div className="mt-4 flex flex-col gap-4">
+
+          <div className="mt-5 flex flex-col gap-5">
+            {/* Bug Type */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="bug-title">Title</Label>
-              <Input
-                id="bug-title"
-                placeholder="Login button not working on mobile"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
+              <Label className="font-semibold">Bug Type</Label>
+              <div className="flex flex-col gap-1.5">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="bugType"
+                    value="related_ticket"
+                    checked={bugType === "related_ticket"}
+                    onChange={() => setBugType("related_ticket")}
+                    className="accent-primary"
+                  />
+                  <span className="text-sm">Related to existing ticket</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="bugType"
+                    value="smoke_regression"
+                    checked={bugType === "smoke_regression"}
+                    onChange={() => setBugType("smoke_regression")}
+                    className="accent-primary"
+                  />
+                  <span className="text-sm">Smoke/Regression test</span>
+                </label>
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="bug-desc">Description</Label>
-              <Textarea
-                id="bug-desc"
-                placeholder="Steps to reproduce, expected vs actual behavior..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
-            <div className="flex gap-4">
-              <div className="flex flex-col gap-2 flex-1">
-                <Label>Severity</Label>
+
+            {/* Environment + Priority */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label className="font-semibold">Environment</Label>
+                <select
+                  value={environment}
+                  onChange={(e) => setEnvironment(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="DEV">DEV</option>
+                  <option value="QA">QA</option>
+                  <option value="STAGING">STAGING</option>
+                  <option value="PROD">PROD</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-semibold">Priority</Label>
                 <select
                   value={severity}
                   onChange={(e) => setSeverity(e.target.value)}
@@ -349,8 +414,71 @@ function CreateBugDialog({
                   <option value="critical">Critical</option>
                 </select>
               </div>
-              <div className="flex flex-col gap-2 flex-1">
-                <Label htmlFor="bug-jira">Jira Key (optional)</Label>
+            </div>
+
+            {/* Title */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bug-title" className="font-semibold">
+                Title <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="bug-title"
+                placeholder="Brief description of the bug (min 10 chars)"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">{title.length}/10 characters minimum</p>
+            </div>
+
+            {/* Steps to Reproduce */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bug-steps" className="font-semibold">
+                Steps to Reproduce <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="bug-steps"
+                placeholder={"1. Navigate to the login page\n2. Enter valid credentials\n3. Click the submit button\n4. Observe the error message"}
+                value={stepsToReproduce}
+                onChange={(e) => setStepsToReproduce(e.target.value)}
+                rows={4}
+              />
+              <p className="text-xs text-muted-foreground">{stepsToReproduce.length}/20 characters minimum</p>
+            </div>
+
+            {/* Actual Result */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bug-actual" className="font-semibold">
+                Actual Result <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="bug-actual"
+                placeholder={'• Error message: "Something went wrong"\n• Page shows blank screen\n• Console shows 500 error'}
+                value={actualResult}
+                onChange={(e) => setActualResult(e.target.value)}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">{actualResult.length}/10 characters minimum</p>
+            </div>
+
+            {/* Expected Result */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bug-expected" className="font-semibold">
+                Expected Result <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="bug-expected"
+                placeholder={"• User should be redirected to dashboard\n• Success message should appear\n• Data should be saved"}
+                value={expectedResult}
+                onChange={(e) => setExpectedResult(e.target.value)}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">{expectedResult.length}/10 characters minimum</p>
+            </div>
+
+            {/* Jira Key (if related to existing ticket) */}
+            {bugType === "related_ticket" && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="bug-jira" className="font-semibold">Jira Ticket Key</Label>
                 <Input
                   id="bug-jira"
                   placeholder="ABATT-1234"
@@ -358,15 +486,29 @@ function CreateBugDialog({
                   onChange={(e) => setJiraKey(e.target.value)}
                 />
               </div>
+            )}
+
+            {/* Labels */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bug-labels" className="font-semibold">Additional Labels (optional)</Label>
+              <Input
+                id="bug-labels"
+                placeholder="e.g., frontend, api, performance (comma-separated)"
+                value={labels}
+                onChange={(e) => setLabels(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Separate multiple labels with commas</p>
             </div>
+
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           </div>
+
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating...</> : "Create"}
+            <Button type="submit" disabled={loading} className="bg-red-600 hover:bg-red-700 text-white">
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating...</> : "Create Ticket"}
             </Button>
           </DialogFooter>
         </form>
