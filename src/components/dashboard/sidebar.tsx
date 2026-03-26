@@ -10,7 +10,6 @@ import {
   FlaskConical,
   PlayCircle,
   CalendarDays,
-  LayoutGrid,
   FileText,
   Bot,
   Workflow,
@@ -29,9 +28,7 @@ const navigation = [
   { name: "Test Cases", href: "/dashboard/test-cases", icon: PenLine },
   { name: "Test Runs", href: "/dashboard/runs", icon: PlayCircle },
   { name: "Daily Executions", href: "/dashboard/daily-executions", icon: CalendarDays },
-  { name: "Control View", href: "/dashboard/control-view", icon: LayoutGrid },
   { name: "Jira Drafts", href: "/dashboard/jira-drafts", icon: FileText },
-  { name: "Jira Assistant", href: "/dashboard/jira-assistant", icon: Bot },
   { name: "Agents", href: "/dashboard/agents", icon: Bot },
   { name: "Pipeline", href: "/dashboard/pipeline", icon: Workflow },
 ];
