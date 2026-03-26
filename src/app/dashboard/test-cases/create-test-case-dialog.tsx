@@ -24,6 +24,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
+import { z } from "zod/v4";
+
+const testCaseSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(200, "Title is too long"),
+  description: z.string().max(2000, "Description is too long").optional(),
+  preconditions: z.string().max(2000, "Preconditions is too long").optional(),
+  priority: z.enum(["low", "medium", "high", "critical"]),
+});
 
 interface CreateTestCaseDialogProps {
   suiteId: string;
@@ -40,10 +48,34 @@ export function CreateTestCaseDialog({ suiteId }: CreateTestCaseDialogProps) {
   const router = useRouter();
   const supabase = createClient();
 
+  function handleOpenChange(isOpen: boolean) {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setTitle("");
+      setDescription("");
+      setPreconditions("");
+      setPriority("medium");
+      setError(null);
+    }
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    const parsed = testCaseSchema.safeParse({
+      title,
+      description: description || undefined,
+      preconditions: preconditions || undefined,
+      priority,
+    });
+
+    if (!parsed.success) {
+      setError(parsed.error.issues[0].message);
+      return;
+    }
+
+    setLoading(true);
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -54,10 +86,10 @@ export function CreateTestCaseDialog({ suiteId }: CreateTestCaseDialogProps) {
 
     const { error } = await supabase.from("test_cases").insert({
       suite_id: suiteId,
-      title,
-      description: description || null,
-      preconditions: preconditions || null,
-      priority,
+      title: parsed.data.title,
+      description: parsed.data.description || null,
+      preconditions: parsed.data.preconditions || null,
+      priority: parsed.data.priority,
       created_by: user.id,
     });
 
@@ -76,7 +108,7 @@ export function CreateTestCaseDialog({ suiteId }: CreateTestCaseDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button><Plus className="mr-2 h-4 w-4" />New Test Case</Button>} />
       <DialogContent className="max-w-lg">
         <form onSubmit={handleCreate}>
@@ -129,7 +161,7 @@ export function CreateTestCaseDialog({ suiteId }: CreateTestCaseDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

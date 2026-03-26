@@ -28,12 +28,27 @@ export function CreateSprintDialog({ projectId }: CreateSprintDialogProps) {
   const router = useRouter();
   const supabase = createClient();
 
+  function handleOpenChange(isOpen: boolean) {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setName("");
+      setError(null);
+    }
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!projectId) {
       setError("Create a project first");
       return;
     }
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError("Name is required");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -46,7 +61,7 @@ export function CreateSprintDialog({ projectId }: CreateSprintDialogProps) {
 
     const { error } = await supabase.from("test_suites").insert({
       project_id: projectId,
-      name,
+      name: trimmedName,
       type: "sprint",
       created_by: user.id,
     });
@@ -63,12 +78,13 @@ export function CreateSprintDialog({ projectId }: CreateSprintDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
           <button
             className="rounded p-0.5 hover:bg-muted"
             onClick={(e) => e.stopPropagation()}
+            aria-label="Create new sprint"
           >
             <Plus className="h-3 w-3" />
           </button>
@@ -90,7 +106,7 @@ export function CreateSprintDialog({ projectId }: CreateSprintDialogProps) {
                 required
               />
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -98,7 +97,6 @@ export function TestCasesLayout({
   const [foldersOpen, setFoldersOpen] = useState(true);
   const [sprintsOpen, setSprintsOpen] = useState(true);
   const [panelOpen, setPanelOpen] = useState(true);
-  const router = useRouter();
 
   return (
     <div className="flex h-full gap-0 -m-6">
@@ -114,6 +112,7 @@ export function TestCasesLayout({
               size="icon"
               className="h-6 w-6"
               onClick={() => setPanelOpen(false)}
+              aria-label="Close side panel"
             >
               <PanelLeftClose className="h-4 w-4" />
             </Button>
@@ -262,6 +261,7 @@ export function TestCasesLayout({
                 size="icon"
                 className="h-6 w-6"
                 onClick={() => setPanelOpen(true)}
+                aria-label="Open side panel"
               >
                 <PanelLeft className="h-4 w-4" />
               </Button>

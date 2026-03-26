@@ -6,20 +6,21 @@ import Link from "next/link";
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const [
-    { count: projectCount },
-    { count: caseCount },
-    { count: runCount },
-  ] = await Promise.all([
-    supabase.from("projects").select("*", { count: "exact", head: true }),
-    supabase.from("test_cases").select("*", { count: "exact", head: true }),
-    supabase.from("test_runs").select("*", { count: "exact", head: true }),
-  ]);
+  const [projectsResult, casesResult, runsResult, passedResult] =
+    await Promise.all([
+      supabase.from("projects").select("*", { count: "exact", head: true }),
+      supabase.from("test_cases").select("*", { count: "exact", head: true }),
+      supabase.from("test_runs").select("*", { count: "exact", head: true }),
+      supabase
+        .from("test_run_results")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "passed"),
+    ]);
 
-  const { count: passedCount } = await supabase
-    .from("test_run_results")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "passed");
+  const projectCount = projectsResult.count;
+  const caseCount = casesResult.count;
+  const runCount = runsResult.count;
+  const passedCount = passedResult.count;
 
   const stats = [
     {

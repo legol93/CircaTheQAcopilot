@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
+import { z } from "zod/v4";
+
+const stepSchema = z.object({
+  action: z.string().trim().min(1, "Action is required").max(1000, "Action is too long"),
+  expected_result: z.string().trim().min(1, "Expected result is required").max(1000, "Expected result is too long"),
+});
 
 interface AddStepFormProps {
   testCaseId: string;
@@ -23,14 +29,25 @@ export function AddStepForm({ testCaseId, nextStepNumber }: AddStepFormProps) {
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    const parsed = stepSchema.safeParse({
+      action,
+      expected_result: expectedResult,
+    });
+
+    if (!parsed.success) {
+      setError(parsed.error.issues[0].message);
+      return;
+    }
+
+    setLoading(true);
 
     const { error } = await supabase.from("test_steps").insert({
       test_case_id: testCaseId,
       step_number: nextStepNumber,
-      action,
-      expected_result: expectedResult,
+      action: parsed.data.action,
+      expected_result: parsed.data.expected_result,
     });
 
     if (error) {
@@ -69,7 +86,7 @@ export function AddStepForm({ testCaseId, nextStepNumber }: AddStepFormProps) {
           />
         </div>
       </div>
-      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
       <Button type="submit" size="sm" className="mt-3" disabled={loading}>
         <Plus className="mr-2 h-4 w-4" />
         {loading ? "Adding..." : "Add Step"}

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { TestCasesLayout } from "./test-cases-layout";
+import { redirect } from "next/navigation";
 
 export default async function TestCasesPage({
   searchParams,
@@ -9,41 +10,70 @@ export default async function TestCasesPage({
   const { suite: activeSuiteId } = await searchParams;
   const supabase = await createClient();
 
+  // Verify user is authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/auth/login");
+  }
+
   // Get current user's project (for now, use the first project)
-  const { data: project } = await supabase
+  const { data: project, error: projectError } = await supabase
     .from("projects")
     .select("id")
     .limit(1)
     .single();
 
-  const projectId = project?.id;
+  if (projectError || !project) {
+    // No project found — render with empty state
+    return (
+      <TestCasesLayout
+        projectId={null}
+        totalCount={0}
+        uncategorizedCount={0}
+        folders={[]}
+        sprints={[]}
+        testCases={[]}
+        activeSuiteId={null}
+        activeSuiteName="All Test Cases"
+      />
+    );
+  }
 
-  // Get all test cases count
+  const projectId = project.id;
+
+  // Get all test cases count scoped to project
   const { count: totalCount } = await supabase
     .from("test_cases")
-    .select("*", { count: "exact", head: true });
+    .select("*, test_suites!inner(project_id)", { count: "exact", head: true })
+    .eq("test_suites.project_id", projectId);
 
   // Get uncategorized count (cases not in any suite — for future use)
   const uncategorizedCount = 0;
 
-  // Get folders
+  // Get folders scoped to project
   const { data: folders } = await supabase
     .from("test_suites")
     .select("*, test_cases(count)")
+    .eq("project_id", projectId)
     .eq("type", "folder")
     .order("name", { ascending: true });
 
-  // Get sprints
+  // Get sprints scoped to project
   const { data: sprints } = await supabase
     .from("test_suites")
     .select("*, test_cases(count)")
+    .eq("project_id", projectId)
     .eq("type", "sprint")
     .order("created_at", { ascending: false });
 
-  // Get test cases for the active suite, or all if none selected
+  // Get test cases for the active suite, or all project cases if none selected
   let testCasesQuery = supabase
     .from("test_cases")
-    .select("*, test_steps(count)")
+    .select("*, test_steps(count), test_suites!inner(project_id)")
+    .eq("test_suites.project_id", projectId)
     .order("created_at", { ascending: false });
 
   if (activeSuiteId) {
@@ -65,7 +95,7 @@ export default async function TestCasesPage({
 
   return (
     <TestCasesLayout
-      projectId={projectId ?? null}
+      projectId={projectId}
       totalCount={totalCount ?? 0}
       uncategorizedCount={uncategorizedCount}
       folders={

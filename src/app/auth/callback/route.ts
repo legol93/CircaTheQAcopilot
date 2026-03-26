@@ -10,9 +10,13 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      // Prevent open redirect: only allow relative paths starting with /
+      const safePath = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+      return NextResponse.redirect(`${origin}${safePath}`);
     }
   }
 
-  return NextResponse.redirect(`${origin}/auth/login?error=Could not authenticate`);
+  return NextResponse.redirect(
+    `${origin}/auth/login?error=${encodeURIComponent("Could not authenticate")}`
+  );
 }

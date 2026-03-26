@@ -28,6 +28,13 @@ export default function SignUpPage() {
     e.preventDefault();
     setError(null);
 
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setError("Email is required");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -41,7 +48,7 @@ export default function SignUpPage() {
     setLoading(true);
 
     const { error } = await supabase.auth.signUp({
-      email,
+      email: trimmedEmail,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
@@ -127,7 +134,7 @@ export default function SignUpPage() {
             </div>
 
             {error && (
-              <p className="text-sm text-destructive">{error}</p>
+              <p role="alert" className="text-sm text-destructive">{error}</p>
             )}
 
             <Button type="submit" className="w-full" disabled={loading}>

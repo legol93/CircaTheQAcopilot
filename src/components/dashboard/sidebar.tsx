@@ -39,7 +39,7 @@ export function Sidebar() {
           <span>Circa QA</span>
         </Link>
       </div>
-      <nav className="flex flex-1 flex-col justify-between p-4">
+      <nav aria-label="Main navigation" className="flex flex-1 flex-col justify-between p-4">
         <div className="flex flex-col gap-1">
           {navigation.map((item) => {
             const isActive =
