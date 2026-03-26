@@ -31,7 +31,7 @@ Siempre invocar `orchestrator` primero para cualquier tarea nueva.
 **Secuencial** (esperar output antes de continuar):
 - uiux-designer → frontend-developer
 - backend-developer → edge-function-expert
-- [todos] → pr-reviewer (siempre al final)
+- [todos] → pr-reviewer → qa-engineer (siempre al final)
 
 ### Memoria compartida
 - Decisiones de arquitectura: `.claude/memory/decisions.md`
@@ -39,4 +39,9 @@ Siempre invocar `orchestrator` primero para cualquier tarea nueva.
 - Scratchpad temporal: `.claude/memory/scratchpad.md`
 
 ### Definition of Done global
-Ninguna tarea está completa hasta que pr-reviewer emite ✅ PASS.
+Ninguna tarea está completa hasta que pr-reviewer emite ✅ PASS y qa-engineer emite ✅ QA_PASS.
+
+### Pipeline completo
+```
+orchestrator → [agentes dev] → pr-reviewer (PASS) → qa-engineer (QA_PASS) → usuario
+```

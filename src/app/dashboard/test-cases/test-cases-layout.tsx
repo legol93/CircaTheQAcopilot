@@ -32,6 +32,7 @@ import { priorityBadgeClass, statusBadgeClass } from "@/lib/badge-variants";
 import { CreateFolderDialog } from "./create-folder-dialog";
 import { CreateSprintDialog } from "./create-sprint-dialog";
 import { CreateTestCaseDialog } from "./create-test-case-dialog";
+import { EditableSuiteName } from "./editable-suite-name";
 
 interface SuiteItem {
   id: string;
@@ -138,20 +139,17 @@ export function TestCasesLayout({
 
             {/* Folders Section */}
             <div className="mt-4">
-              <button
-                onClick={() => setFoldersOpen(!foldersOpen)}
-                className="flex w-full items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-              >
-                <span>Folders</span>
-                <div className="flex items-center gap-1">
-                  <CreateFolderDialog projectId={projectId} />
+              <div className="flex w-full items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <button onClick={() => setFoldersOpen(!foldersOpen)} className="flex items-center gap-1">
+                  <span>Folders</span>
                   {foldersOpen ? (
                     <ChevronDown className="h-3 w-3" />
                   ) : (
                     <ChevronRight className="h-3 w-3" />
                   )}
-                </div>
-              </button>
+                </button>
+                <CreateFolderDialog projectId={projectId} />
+              </div>
               {foldersOpen && (
                 <div className="mt-1 flex flex-col">
                   {folders.map((folder) => {
@@ -173,7 +171,7 @@ export function TestCasesLayout({
                             className="h-4 w-4 shrink-0"
                             style={{ color: folder.color ?? undefined }}
                           />
-                          <span className="truncate">{folder.name}</span>
+                          <EditableSuiteName suiteId={folder.id} name={folder.name} />
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {folder.count}
@@ -192,20 +190,17 @@ export function TestCasesLayout({
 
             {/* Sprints Section */}
             <div className="mt-4">
-              <button
-                onClick={() => setSprintsOpen(!sprintsOpen)}
-                className="flex w-full items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-              >
-                <span>Sprints</span>
-                <div className="flex items-center gap-1">
-                  <CreateSprintDialog projectId={projectId} />
+              <div className="flex w-full items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <button onClick={() => setSprintsOpen(!sprintsOpen)} className="flex items-center gap-1">
+                  <span>Sprints</span>
                   {sprintsOpen ? (
                     <ChevronDown className="h-3 w-3" />
                   ) : (
                     <ChevronRight className="h-3 w-3" />
                   )}
-                </div>
-              </button>
+                </button>
+                <CreateSprintDialog projectId={projectId} />
+              </div>
               {sprintsOpen && (
                 <div className="mt-1 flex flex-col">
                   {sprints.map((sprint) => (
@@ -221,7 +216,7 @@ export function TestCasesLayout({
                     >
                       <span className="flex items-center gap-2 truncate">
                         <CalendarDays className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{sprint.name}</span>
+                        <EditableSuiteName suiteId={sprint.id} name={sprint.name} />
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {sprint.count}

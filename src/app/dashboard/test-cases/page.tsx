@@ -10,7 +10,7 @@ export default async function TestCasesPage({
   const { suite: activeSuiteId } = await searchParams;
   const supabase = await createClient();
 
-  // Verify user is authenticated
+  // Get user (session already refreshed by middleware)
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -27,15 +27,47 @@ export default async function TestCasesPage({
     .single();
 
   if (!project) {
-    const { data: newProject } = await supabase
+    // Insert the project — RLS allows insert if created_by = auth.uid()
+    const { error: insertError } = await supabase
       .from("projects")
-      .insert({ name: "Default", created_by: user.id })
+      .insert({ name: "Default", created_by: user.id });
+
+    if (insertError) {
+      console.error("Failed to create default project:", insertError.message);
+    }
+
+    // The trigger `add_project_owner` adds the user as owner,
+    // so now SELECT will pass RLS
+    const { data: newProject, error: selectError } = await supabase
+      .from("projects")
       .select("id")
+      .limit(1)
       .single();
+
+    if (selectError) {
+      console.error("Failed to fetch project after create:", selectError.message);
+    }
+
     project = newProject;
   }
 
-  const projectId = project!.id;
+  if (!project) {
+    // Fallback: render empty state instead of redirecting to login
+    return (
+      <TestCasesLayout
+        projectId=""
+        totalCount={0}
+        uncategorizedCount={0}
+        folders={[]}
+        sprints={[]}
+        testCases={[]}
+        activeSuiteId={null}
+        activeSuiteName="All Test Cases"
+      />
+    );
+  }
+
+  const projectId = project.id;
 
   // Get all test cases count scoped to project
   const { count: totalCount } = await supabase

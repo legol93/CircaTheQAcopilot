@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FolderKanban, FileText, PlayCircle, CheckCircle } from "lucide-react";
+import { XCircle, FileText, PlayCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
     {
       title: "Failed",
       value: failedCount ?? 0,
-      icon: FolderKanban,
+      icon: XCircle,
       href: "/dashboard/runs",
     },
   ];
