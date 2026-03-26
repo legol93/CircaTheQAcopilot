@@ -89,6 +89,40 @@ export interface ProjectMember {
   created_at: string;
 }
 
+export type JiraPendingStatus = "pending" | "dismissed" | "created";
+
+export interface JiraConnection {
+  id: string;
+  project_id: string;
+  site_url: string;
+  jira_project_key: string;
+  webhook_secret: string | null;
+  api_email: string | null;
+  api_token: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JiraPendingTicket {
+  id: string;
+  project_id: string;
+  jira_issue_key: string;
+  jira_issue_id: string;
+  title: string;
+  description: string | null;
+  issue_type: string | null;
+  priority: string | null;
+  assignee: string | null;
+  jira_url: string | null;
+  status: JiraPendingStatus;
+  target_suite_id: string | null;
+  created_test_case_id: string | null;
+  webhook_payload: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AiPromptLog {
   id: string;
   user_id: string;

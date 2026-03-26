@@ -33,6 +33,7 @@ import { CreateFolderDialog } from "./create-folder-dialog";
 import { CreateSprintDialog } from "./create-sprint-dialog";
 import { CreateTestCaseDialog } from "./create-test-case-dialog";
 import { EditableSuiteName } from "./editable-suite-name";
+import { JiraPendingBanner } from "./jira-pending-banner";
 
 interface SuiteItem {
   id: string;
@@ -259,6 +260,14 @@ export function TestCasesLayout({
             <CreateTestCaseDialog suiteId={activeSuiteId} />
           )}
         </div>
+
+        <JiraPendingBanner
+          projectId={projectId}
+          suites={[
+            ...folders.map((f) => ({ id: f.id, name: f.name })),
+            ...sprints.map((s) => ({ id: s.id, name: s.name })),
+          ]}
+        />
 
         {testCases.length === 0 ? (
           <div className="mx-6 mt-6 flex flex-col items-center justify-center rounded-lg border border-dashed py-20">
