@@ -133,6 +133,17 @@ function RunCard({ run }: { run: WorkflowRun }) {
         <div className="flex flex-col gap-2 min-w-0">
           {/* Badges row */}
           <div className="flex flex-wrap items-center gap-1.5">
+            <Badge
+              variant="secondary"
+              className={cn(
+                "rounded-full font-semibold",
+                run.event === "schedule"
+                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800"
+                  : "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800"
+              )}
+            >
+              {run.event === "schedule" ? "DEV" : "QA"}
+            </Badge>
             {tenant !== "Unknown" && (
               <Badge variant="secondary" className={tenantBadgeClass[tenant]}>
                 {tenant}

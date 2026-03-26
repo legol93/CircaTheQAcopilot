@@ -126,18 +126,8 @@ async function fetchRunDetail(runId: string) {
       }
     }
 
-    // Also parse individual failure annotations for error details
-    if (ann.annotation_level === "failure" && ann.title) {
-      const nameMatch = ann.title.match(/›\s+(.+?)$/);
-      if (nameMatch) {
-        const existing = tests.find(
-          (t) => t.status === "failed" && t.name === nameMatch[1].trim()
-        );
-        if (existing) {
-          existing.retries = (existing.retries ?? 0) + 1;
-        }
-      }
-    }
+    // Note: individual failure annotations are duplicated per retry attempt
+    // so we don't use them for retry counts (data not reliable from API)
   }
 
   // Parse slow test annotations for duration
