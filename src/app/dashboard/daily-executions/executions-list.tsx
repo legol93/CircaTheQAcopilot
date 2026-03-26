@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import {
   CalendarDays,
   ExternalLink,
@@ -14,6 +15,7 @@ import {
   TrendingUp,
   Filter,
   RotateCw,
+  AlertTriangle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -148,6 +150,12 @@ function RunCard({ run }: { run: WorkflowRun }) {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CalendarDays className="h-3.5 w-3.5 shrink-0" />
             <span>{formatShortDate(run.created_at)}</span>
+            {run.test_total > 0 && (
+              <>
+                <span className="text-muted-foreground/50">|</span>
+                <span>{run.test_total} tests</span>
+              </>
+            )}
             <span className="text-muted-foreground/50">|</span>
             <Timer className="h-3.5 w-3.5 shrink-0" />
             <span>{formatTime(run.created_at)}</span>
@@ -168,29 +176,45 @@ function RunCard({ run }: { run: WorkflowRun }) {
           </div>
         </div>
 
-        {/* Right section */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Right section: test counts + conclusion + link */}
+        <div className="flex items-center gap-4 shrink-0">
+          {/* Test counts */}
+          <div className="flex items-center gap-3 text-sm">
+            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="h-4 w-4" />
+              <span className="font-semibold">{run.test_passed}</span>
+            </span>
+            <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+              <XCircle className="h-4 w-4" />
+              <span className="font-semibold">{run.test_failed}</span>
+            </span>
+            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="font-semibold">{run.test_flaky}</span>
+            </span>
+          </div>
+
+          {/* Pass rate badge */}
           <Badge
             variant="secondary"
             className={cn(
-              "gap-1",
-              conclusionBadgeClass[badgeKey] ?? conclusionBadgeClass.cancelled
+              "rounded-full px-3 font-semibold",
+              run.pass_rate >= 90
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
+                : run.pass_rate >= 70
+                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
+                  : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
             )}
           >
-            {cIcon}
-            {cLabel}
+            {run.pass_rate}% pass
           </Badge>
 
-          <a
-            href={run.html_url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <Link href={`/dashboard/daily-executions/${run.id}`}>
             <Button variant="outline" size="sm">
               View Details
               <ExternalLink className="ml-1 h-3 w-3" />
             </Button>
-          </a>
+          </Link>
         </div>
       </CardContent>
     </Card>
