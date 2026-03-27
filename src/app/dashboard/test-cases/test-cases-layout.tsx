@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +88,12 @@ export function TestCasesLayout({
   const [foldersOpen, setFoldersOpen] = useState(true);
   const [sprintsOpen, setSprintsOpen] = useState(true);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 25;
+  const totalPages = Math.ceil(testCases.length / PAGE_SIZE);
+  const paginatedCases = testCases.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  useEffect(() => { setCurrentPage(1); }, [activeSuiteId]);
 
   return (
     <div className="flex h-full gap-0 -m-6">
@@ -287,6 +293,7 @@ export function TestCasesLayout({
             )}
           </div>
         ) : (
+          <>
           <Table>
             <TableHeader>
               <TableRow>
@@ -301,7 +308,7 @@ export function TestCasesLayout({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {testCases.map((tc) => (
+              {paginatedCases.map((tc) => (
                 <TableRow
                   key={tc.id}
                   className="cursor-pointer transition-colors duration-100 hover:bg-muted/60"
@@ -383,6 +390,51 @@ export function TestCasesLayout({
               ))}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, testCases.length)} of {testCases.length}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => (
+                    <span key={p}>
+                      {idx > 0 && arr[idx - 1] !== p - 1 && (
+                        <span className="px-1 text-muted-foreground">...</span>
+                      )}
+                      <Button
+                        variant={p === currentPage ? "default" : "outline"}
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => setCurrentPage(p)}
+                      >
+                        {p}
+                      </Button>
+                    </span>
+                  ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
         )}
       </div>
     </div>

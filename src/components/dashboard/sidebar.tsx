@@ -14,7 +14,6 @@ import {
   FileText,
   Bug,
   Bot,
-  Workflow,
   Settings,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -32,8 +31,7 @@ const navigation = [
   { name: "Daily Executions", href: "/dashboard/daily-executions", icon: CalendarDays },
   { name: "Bug Tickets", href: "/dashboard/bug-tickets", icon: Bug },
   { name: "Jira Drafts", href: "/dashboard/jira-drafts", icon: FileText },
-  { name: "Agents", href: "/dashboard/agents", icon: Bot },
-  { name: "Pipeline", href: "/dashboard/pipeline", icon: Workflow },
+  { name: "Agents & Pipeline", href: "/dashboard/agents", icon: Bot },
 ];
 
 export function NavItems({ onNavigate }: { onNavigate?: () => void }) {
