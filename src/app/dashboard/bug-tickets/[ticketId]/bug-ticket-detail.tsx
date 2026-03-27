@@ -31,9 +31,11 @@ import {
   Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CreateInJiraDialog } from "./create-in-jira-dialog";
 
 interface Ticket {
   id: string;
+  project_id: string;
   title: string;
   description: string | null;
   bug_type: string | null;
@@ -71,6 +73,7 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
   const [saving, setSaving] = useState(false);
   const [improving, setImproving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [jiraDialogOpen, setJiraDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -187,6 +190,17 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
             {improving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
             {improving ? "Improving..." : "Improve with AI"}
           </Button>
+          {!ticket.jira_key && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setJiraDialogOpen(true)}
+              className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Create in Jira
+            </Button>
+          )}
           {ticket.jira_key && (
             <a href={ticket.jira_url ?? "#"} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" className="gap-1">
@@ -309,6 +323,16 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create in Jira dialog */}
+      <CreateInJiraDialog
+        ticket={ticket}
+        open={jiraDialogOpen}
+        onOpenChange={setJiraDialogOpen}
+        onCreated={(issueKey, issueUrl) => {
+          setTicket((prev) => ({ ...prev, jira_key: issueKey, jira_url: issueUrl }));
+        }}
+      />
     </div>
   );
 }

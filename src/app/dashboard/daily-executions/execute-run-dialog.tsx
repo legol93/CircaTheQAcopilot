@@ -42,8 +42,8 @@ interface RecentRun {
 }
 
 const ENV_URLS: Record<Environment, string> = {
-  DEV: "https://app.dev.circathera.com/login",
-  QA: "https://app.circathera.com/login",
+  DEV: "https://app.dev.circathera.com",
+  QA: "https://app.qa.circathera.com",
 };
 
 /* ─── Helpers ────────────────────────────────────────────────── */

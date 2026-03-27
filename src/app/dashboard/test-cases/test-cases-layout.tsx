@@ -299,11 +299,10 @@ export function TestCasesLayout({
               <TableRow>
                 <TableHead className="w-24">ID</TableHead>
                 <TableHead>Title</TableHead>
-                <TableHead>Priority</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Steps</TableHead>
                 <TableHead>Source</TableHead>
-                <TableHead>Created</TableHead>
                 <TableHead className="w-32">Move to</TableHead>
               </TableRow>
             </TableHeader>
@@ -356,9 +355,6 @@ export function TestCasesLayout({
                         Manual
                       </span>
                     )}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(tc.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <select

@@ -1,5 +1,5 @@
 export type Priority = "low" | "medium" | "high" | "critical";
-export type Status = "draft" | "active" | "deprecated";
+export type Status = "draft" | "active" | "deprecated" | "fail" | "pass_dev_env" | "pass_qa_env" | "released";
 export type RunStatus = "pending" | "in_progress" | "completed";
 export type ResultStatus = "passed" | "failed" | "blocked" | "skipped" | "not_run";
 export type SuiteType = "folder" | "sprint";
