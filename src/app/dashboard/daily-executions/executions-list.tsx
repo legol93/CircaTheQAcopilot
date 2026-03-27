@@ -33,6 +33,7 @@ import {
   sourceBadgeClass,
 } from "@/lib/badge-variants";
 import { cn } from "@/lib/utils";
+import { ExecuteRunDialog } from "./execute-run-dialog";
 import type { GroupedRuns, WorkflowRun } from "./page";
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
@@ -267,11 +268,14 @@ export function ExecutionsList({
       {/* ── Main content ── */}
       <div className="flex-1 min-w-0">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Daily Executions</h1>
-          <p className="mt-1 text-muted-foreground">
-            Automated test execution results from GitHub Actions
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Daily Executions</h1>
+            <p className="mt-1 text-muted-foreground">
+              Automated test execution results from GitHub Actions
+            </p>
+          </div>
+          <ExecuteRunDialog />
         </div>
 
         {/* Run groups */}
