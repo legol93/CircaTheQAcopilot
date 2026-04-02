@@ -30,7 +30,7 @@ const PRIORITY_MAP: Record<string, string> = {
 const CreateTicketSchema = z.object({
   ticketType: z.enum(["bug", "story_bug"]),
   parentTicketKey: z.string().optional(),
-  environment: z.enum(["Dev", "QA", "Prod"]),
+  environment: z.string().min(1, "Environment is required"),
   reporterName: z.string().min(1, "Reporter name is required"),
   reporterEmail: z.string().email("Invalid reporter email"),
   title: z.string().min(1, "Title is required"),
