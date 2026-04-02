@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -16,6 +16,8 @@ import {
   Filter,
   RotateCw,
   AlertTriangle,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -119,7 +121,7 @@ interface ExecutionsListProps {
 
 /* ─── Run Card ────────────────────────────────────────────────── */
 
-function RunCard({ run }: { run: WorkflowRun }) {
+function RunCard({ run, onDelete, deleting }: { run: WorkflowRun; onDelete: (id: number) => void; deleting: boolean }) {
   const tenant = extractTenant(run.name);
   const trigger = triggerLabel(run.event);
   const cLabel = conclusionLabel(run.conclusion, run.status);
@@ -227,6 +229,20 @@ function RunCard({ run }: { run: WorkflowRun }) {
               <ExternalLink className="ml-1 h-3 w-3" />
             </Button>
           </Link>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            onClick={() => onDelete(run.id)}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -244,12 +260,30 @@ export function ExecutionsList({
 }: ExecutionsListProps) {
   const [tenantFilter, setTenantFilter] = useState<string>("all");
   const [triggerFilter, setTriggerFilter] = useState<string>("all");
+  const [deletedIds, setDeletedIds] = useState<Set<number>>(new Set());
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const handleDeleteRun = useCallback(async (runId: number) => {
+    if (!confirm("Are you sure you want to delete this run? This cannot be undone.")) return;
+    setDeletingId(runId);
+    try {
+      const res = await fetch(`/api/github/runs/${runId}`, { method: "DELETE" });
+      if (res.ok) {
+        setDeletedIds((prev) => new Set(prev).add(runId));
+      }
+    } catch {
+      // keep visible on error
+    } finally {
+      setDeletingId(null);
+    }
+  }, []);
 
   const filteredGrouped = useMemo(() => {
     return grouped
       .map((group) => ({
         ...group,
         runs: group.runs.filter((run) => {
+          if (deletedIds.has(run.id)) return false;
           const tenant = extractTenant(run.name);
           if (tenantFilter !== "all" && tenant !== tenantFilter) return false;
           if (triggerFilter !== "all" && run.event !== triggerFilter) return false;
@@ -257,7 +291,7 @@ export function ExecutionsList({
         }),
       }))
       .filter((group) => group.runs.length > 0);
-  }, [grouped, tenantFilter, triggerFilter]);
+  }, [grouped, tenantFilter, triggerFilter, deletedIds]);
 
   const filteredTotal = filteredGrouped.reduce((acc, g) => acc + g.runs.length, 0);
 
@@ -323,7 +357,7 @@ export function ExecutionsList({
                 {/* Run cards */}
                 <div className="flex flex-col gap-3">
                   {group.runs.map((run) => (
-                    <RunCard key={run.id} run={run} />
+                    <RunCard key={run.id} run={run} onDelete={handleDeleteRun} deleting={deletingId === run.id} />
                   ))}
                 </div>
               </section>
