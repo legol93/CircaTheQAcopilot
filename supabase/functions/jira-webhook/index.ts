@@ -56,18 +56,18 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // ── 3. Filter: status changes to "IN DEV ENV'T" or "READY FOR QA ENV'T"
+    // ── 3. Filter: only status changes to "IN DEV ENV'T" ─────────
     const changelogItems: Array<{
       field: string;
       fromString: string;
       toString: string;
     }> = payload?.changelog?.items ?? [];
 
-    const statusChange = changelogItems.find((item) => {
-      if (item.field !== "status") return false;
-      const target = item.toString?.toUpperCase() ?? "";
-      return target.includes("IN DEV ENV") || target.includes("READY FOR QA");
-    });
+    const statusChange = changelogItems.find(
+      (item) =>
+        item.field === "status" &&
+        item.toString?.toUpperCase().includes("IN DEV ENV"),
+    );
 
     if (!statusChange) {
       return jsonResponse({
