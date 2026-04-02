@@ -15,12 +15,12 @@ const JIRA_ISSUE_TYPE_IDS: Record<string, string> = {
 // Map app severity to Jira priority names
 // ---------------------------------------------------------------------------
 
-const PRIORITY_MAP: Record<string, string> = {
-  Highest: "Highest",
-  High: "High",
-  Medium: "Medium",
-  Low: "Low",
-  Lowest: "Lowest",
+const PRIORITY_ID_MAP: Record<string, string> = {
+  Highest: "1",
+  High: "2",
+  Medium: "3",
+  Low: "4",
+  Lowest: "5",
 };
 
 // ---------------------------------------------------------------------------
@@ -129,7 +129,7 @@ export async function POST(request: Request) {
       issuetype: { id: issueTypeId },
       summary: title,
       description: adfDescription,
-      priority: { name: PRIORITY_MAP[priority] || "Medium" },
+      priority: { id: PRIORITY_ID_MAP[priority] || "3" },
       labels: sanitizedLabels,
     };
 
