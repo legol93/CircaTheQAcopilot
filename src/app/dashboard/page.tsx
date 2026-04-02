@@ -9,7 +9,7 @@ export default async function DashboardPage() {
   const [casesResult, aiCasesResult, runsResult, passedResult, failedResult] =
     await Promise.all([
       supabase.from("test_cases").select("*", { count: "exact", head: true }),
-      supabase.from("test_cases").select("*", { count: "exact", head: true }).eq("ai_generated", true),
+      supabase.from("test_cases").select("*", { count: "exact", head: true }).eq("suite_id", "f7d0d66f-ff04-4480-89e3-23f20751a688"),
       supabase.from("test_runs").select("*", { count: "exact", head: true }),
       supabase
         .from("test_run_results")
@@ -38,10 +38,10 @@ export default async function DashboardPage() {
       bgIcon: "bg-indigo-50 dark:bg-indigo-950/50",
     },
     {
-      title: "AI Generated",
+      title: "Automated",
       value: aiCaseCount ?? 0,
       icon: Sparkles,
-      href: "/dashboard/test-cases",
+      href: "/dashboard/test-cases?suite=f7d0d66f-ff04-4480-89e3-23f20751a688",
       iconColor: "text-purple-600 dark:text-purple-400",
       borderColor: "border-l-purple-500",
       bgIcon: "bg-purple-50 dark:bg-purple-950/50",
