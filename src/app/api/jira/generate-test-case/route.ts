@@ -54,9 +54,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (ticket.status !== "pending") {
+    if (ticket.status === "created") {
       return NextResponse.json(
-        { error: "Ticket has already been processed" },
+        { error: "Ticket already has a test case" },
         { status: 409 },
       );
     }

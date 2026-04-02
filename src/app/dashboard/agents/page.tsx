@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -82,12 +82,12 @@ const dispatchRules = [
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<AgentData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchAgents = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
+  async function fetchAgents() {
+    setRefreshing(true);
     try {
       const res = await fetch("/api/agents");
       if (res.ok) {
@@ -98,14 +98,9 @@ export default function AgentsPage() {
     } catch {
       // Keep existing data
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchAgents();
-  }, [fetchAgents]);
+  }
 
   const slugify = (name: string) => name.toLowerCase().replace(/[\s/]+/g, "-");
 
@@ -149,15 +144,17 @@ export default function AgentsPage() {
         </Badge>
       </h2>
 
-      {loading ? (
+      {refreshing ? (
         <div className="mt-4 flex items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          Loading agents from repository...
+          Syncing agents from repository...
         </div>
       ) : agents.length === 0 ? (
         <div className="mt-4 flex flex-col items-center justify-center rounded-lg border border-dashed py-12">
           <Bot className="h-10 w-10 text-muted-foreground" />
-          <p className="mt-3 text-sm text-muted-foreground">No agents found in .claude/agents/</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            {lastUpdated ? "No agents found in .claude/agents/" : "Click \"Sync from repo\" to load agents"}
+          </p>
         </div>
       ) : (
         <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

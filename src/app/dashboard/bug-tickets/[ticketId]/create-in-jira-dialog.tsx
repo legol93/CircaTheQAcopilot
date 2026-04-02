@@ -93,11 +93,11 @@ export function CreateInJiraDialog({
   // Form state
   const [ticketType, setTicketType] = useState<TicketType>("bug");
   const [parentTicketKey, setParentTicketKey] = useState("");
-  const [environment, setEnvironment] = useState<Environment>(
+  const [environments, setEnvironments] = useState<Environment[]>([
     ENV_MAP[ticket.environment ?? "QA"] ?? "QA",
-  );
-  const [reporterName, setReporterName] = useState("");
-  const [reporterEmail, setReporterEmail] = useState("");
+  ]);
+  const [reporterName, setReporterName] = useState("Leonardo Cantillo");
+  const [reporterEmail, setReporterEmail] = useState("leo@circathera.com");
   const [priority, setPriority] = useState<JiraPriority>(
     SEVERITY_TO_PRIORITY[ticket.severity] ?? "Medium",
   );
@@ -112,34 +112,29 @@ export function CreateInJiraDialog({
 
   // Pre-fill reporter from session
   useEffect(() => {
-    async function loadUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setReporterEmail(user.email ?? "");
-        setReporterName(
-          user.user_metadata?.full_name ??
-            user.user_metadata?.name ??
-            user.email?.split("@")[0] ??
-            "",
-        );
-      }
-    }
     if (open) {
-      loadUser();
       setCreatedIssue(null);
       setError(null);
     }
   }, [open, supabase]);
 
   // Derived values
+  function toggleEnv(env: Environment) {
+    setEnvironments((prev) => {
+      if (prev.includes(env)) {
+        return prev.length > 1 ? prev.filter((e) => e !== env) : prev;
+      }
+      return [...prev, env];
+    });
+  }
+
   const typeLabel = ticketType === "bug" ? "Bug" : "Story Bug";
-  const generatedTitle = `[${typeLabel}][${environment}] ${ticket.title}`;
+  const envLabel = environments.join("/");
+  const generatedTitle = `[${typeLabel}][${envLabel}] ${ticket.title}`;
 
   const autoLabels = [
     ticketType === "bug" ? "bug" : "story-bug",
-    environment.toLowerCase(),
+    ...environments.map((e) => e.toLowerCase()),
     `priority-${priority.toLowerCase()}`,
     "circa-qa",
   ];
@@ -217,7 +212,7 @@ export function CreateInJiraDialog({
           ticketType,
           parentTicketKey:
             ticketType === "story_bug" ? parsedParentKey : undefined,
-          environment,
+          environment: envLabel,
           reporterName: reporterName.trim(),
           reporterEmail: reporterEmail.trim(),
           title: generatedTitle,
@@ -397,10 +392,10 @@ export function CreateInJiraDialog({
                   <button
                     key={env}
                     type="button"
-                    onClick={() => setEnvironment(env)}
+                    onClick={() => toggleEnv(env)}
                     className={cn(
                       "rounded-full border px-4 py-1.5 text-sm font-medium transition-all",
-                      environment === env
+                      environments.includes(env)
                         ? "border-sky-500 bg-sky-50 text-sky-700"
                         : "border-border hover:bg-muted",
                     )}
