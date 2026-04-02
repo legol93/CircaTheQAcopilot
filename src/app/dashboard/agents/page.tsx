@@ -82,7 +82,6 @@ const dispatchRules = [
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<AgentData[]>([]);
-  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -122,7 +121,7 @@ export default function AgentsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fetchAgents(true)}
+            onClick={() => fetchAgents()}
             disabled={refreshing}
             className="gap-1.5"
           >
@@ -140,7 +139,7 @@ export default function AgentsPage() {
       <h2 className="mt-8 text-lg font-semibold">
         Agents
         <Badge variant="secondary" className="ml-2 rounded-full text-xs">
-          {loading ? "..." : agents.length}
+          {agents.length}
         </Badge>
       </h2>
 
