@@ -45,10 +45,9 @@ function mapJiraPriority(jiraPriority: string): string {
 // System prompt
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `You are a QA engineer generating test cases. Given a Jira ticket, produce a comprehensive test case.
-Output ONLY valid JSON, no markdown, no explanation.
-Schema: { title: string, description: string, preconditions: string, priority: "low"|"medium"|"high"|"critical", steps: [{ step_number: number, action: string, expected_result: string }] }
-Rules: 3-8 steps, atomic and verifiable, include happy path and edge cases, imperative language.`;
+const SYSTEM_PROMPT = `QA engineer. Generate test case from Jira ticket. Output JSON only, no markdown:
+{title, description, preconditions, priority: "low"|"medium"|"high"|"critical", steps: [{step_number, action, expected_result}]}
+3-8 atomic steps. Happy path + edge cases. Imperative language.`;
 
 // ---------------------------------------------------------------------------
 // Main function
@@ -75,9 +74,9 @@ Generate a test case.`;
 
   const response = await anthropic.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 2000,
+    max_tokens: 1200,
     temperature: 0.3,
-    system: SYSTEM_PROMPT,
+    system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: userMessage }],
   });
 

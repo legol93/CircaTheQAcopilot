@@ -19,31 +19,9 @@ const ImprovedSchema = z.object({
   })).min(1).max(15),
 });
 
-const SYSTEM_PROMPT = `You are a senior QA engineer improving an existing test case. You will receive the current test case with its title, description, preconditions, and steps.
-
-Your job:
-1. Improve the title to be more specific and descriptive
-2. Enhance the description to clearly explain what is being tested and why
-3. Add or improve preconditions to be realistic and complete
-4. Improve existing steps: make actions more specific, expected results more verifiable
-5. Add missing steps for edge cases, validation, and error scenarios
-6. Ensure steps cover the happy path AND at least one negative/edge case
-
-Output ONLY valid JSON, no markdown, no explanation. Schema:
-{
-  "title": "string",
-  "description": "string",
-  "preconditions": "string",
-  "priority": "low|medium|high|critical",
-  "steps": [{"step_number": 1, "action": "string", "expected_result": "string"}]
-}
-
-Rules:
-- Keep the original intent of the test case
-- Use clear, imperative language ("Click...", "Enter...", "Verify...")
-- Each step must be atomic and independently verifiable
-- Expected results must be specific and measurable
-- 5-12 steps is ideal`;
+const SYSTEM_PROMPT = `Senior QA engineer. Improve test case: title (specific), description (what/why), preconditions (complete), steps (atomic, verifiable, imperative).
+Add edge cases. 5-12 steps. Happy path + negative case.
+Output JSON only: {title, description, preconditions, priority: "low"|"medium"|"high"|"critical", steps: [{step_number, action, expected_result}]}. Keep original intent.`;
 
 export async function POST(request: Request) {
   try {
@@ -100,9 +78,9 @@ Improve this test case. Keep the original intent but make it more thorough, spec
     const anthropic = new Anthropic();
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 3000,
+      max_tokens: 1800,
       temperature: 0.3,
-      system: SYSTEM_PROMPT,
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userMessage }],
     });
 
@@ -117,7 +95,18 @@ Improve this test case. Keep the original intent but make it more thorough, spec
       rawText = rawText.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
     }
 
-    const improved = ImprovedSchema.safeParse(JSON.parse(rawText));
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(rawText);
+    } catch {
+      try {
+        parsedJson = JSON.parse(rawText + "}");
+      } catch {
+        return NextResponse.json({ error: "AI returned invalid JSON" }, { status: 500 });
+      }
+    }
+
+    const improved = ImprovedSchema.safeParse(parsedJson);
     if (!improved.success) {
       return NextResponse.json({ error: "AI response failed validation" }, { status: 500 });
     }

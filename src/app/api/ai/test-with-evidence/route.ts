@@ -2,26 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";
 
-const SYSTEM_PROMPT = `You are a QA engineer analyzing screenshots/images as evidence for a test case execution. Compare what you see in the images against the expected test steps.
-
-For each step, determine if the evidence shows it passing, failing, or if you can't tell (inconclusive).
-
-Output ONLY valid JSON:
-{
-  "verdict": "pass" | "fail" | "inconclusive",
-  "summary": "1-2 sentence overall assessment",
-  "step_results": [
-    {"step_number": 1, "status": "pass|fail|inconclusive", "observation": "what you see in the evidence"}
-  ],
-  "recommendations": "optional suggestions for improvement"
-}
-
-Rules:
-- Be objective — only report what you can actually see in the images
-- If a step can't be verified from the images, mark it as "inconclusive"
-- Overall verdict is "fail" if ANY step fails
-- Overall verdict is "pass" only if ALL verifiable steps pass
-- Keep observations concise but specific`;
+const SYSTEM_PROMPT = `QA engineer analyzing screenshots against test steps. Output JSON only:
+{verdict: "pass"|"fail"|"inconclusive", summary, step_results: [{step_number, status: "pass"|"fail"|"inconclusive", observation}], recommendations}
+Objective: only report what you see. "fail" if ANY step fails. "pass" only if ALL verifiable steps pass. Concise observations.`;
 
 export async function POST(request: Request) {
   try {
@@ -70,9 +53,9 @@ export async function POST(request: Request) {
     const anthropic = new Anthropic();
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 2000,
+      max_tokens: 1200,
       temperature: 0.2,
-      system: SYSTEM_PROMPT,
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content }],
     });
 

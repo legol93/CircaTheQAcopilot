@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -27,6 +28,8 @@ import {
   FlaskConical,
   PanelLeftClose,
   PanelLeft,
+  Search,
+  X,
 } from "lucide-react";
 import { priorityBadgeClass, statusBadgeClass } from "@/lib/badge-variants";
 import { CreateFolderDialog } from "./create-folder-dialog";
@@ -89,11 +92,23 @@ export function TestCasesLayout({
   const [sprintsOpen, setSprintsOpen] = useState(true);
   const [panelOpen, setPanelOpen] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
   const PAGE_SIZE = 25;
-  const totalPages = Math.ceil(testCases.length / PAGE_SIZE);
-  const paginatedCases = testCases.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  useEffect(() => { setCurrentPage(1); }, [activeSuiteId]);
+  const filteredCases = useMemo(() => {
+    if (!search.trim()) return testCases;
+    const q = search.toLowerCase();
+    return testCases.filter(
+      (tc) =>
+        tc.title.toLowerCase().includes(q) ||
+        tc.id.toLowerCase().startsWith(q)
+    );
+  }, [testCases, search]);
+
+  const totalPages = Math.ceil(filteredCases.length / PAGE_SIZE);
+  const paginatedCases = filteredCases.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  useEffect(() => { setCurrentPage(1); }, [activeSuiteId, search]);
 
   return (
     <div className="flex h-full gap-0 -m-6">
@@ -259,12 +274,31 @@ export function TestCasesLayout({
             )}
             <h2 className="text-lg font-semibold tracking-tight">{activeSuiteName}</h2>
             <span className="text-sm text-muted-foreground">
-              ({testCases.length})
+              ({filteredCases.length})
             </span>
           </div>
-          {activeSuiteId && (
-            <CreateTestCaseDialog suiteId={activeSuiteId} />
-          )}
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search test cases..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-8 w-56 pl-8 pr-8 text-sm"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            {activeSuiteId && (
+              <CreateTestCaseDialog suiteId={activeSuiteId} />
+            )}
+          </div>
         </div>
 
         <JiraPendingBanner
@@ -275,16 +309,18 @@ export function TestCasesLayout({
           ]}
         />
 
-        {testCases.length === 0 ? (
+        {filteredCases.length === 0 ? (
           <div className="mx-6 mt-6 flex flex-col items-center justify-center rounded-lg border border-dashed py-20">
             <div className="bg-muted p-4 rounded-full">
               <FlaskConical className="h-12 w-12 text-muted-foreground" />
             </div>
             <h3 className="mt-4 text-lg font-semibold">No test cases</h3>
             <p className="mt-1 max-w-sm text-center text-sm text-muted-foreground">
-              {activeSuiteId
-                ? "Add test cases to this folder or sprint to start tracking quality."
-                : "Create a folder and start adding test cases to organize your testing."}
+              {search
+                ? `No test cases matching "${search}"`
+                : activeSuiteId
+                  ? "Add test cases to this folder or sprint to start tracking quality."
+                  : "Create a folder and start adding test cases to organize your testing."}
             </p>
             {activeSuiteId && (
               <div className="mt-4">
@@ -391,7 +427,7 @@ export function TestCasesLayout({
           {totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-3">
               <p className="text-sm text-muted-foreground">
-                Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, testCases.length)} of {testCases.length}
+                Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredCases.length)} of {filteredCases.length}
               </p>
               <div className="flex items-center gap-1">
                 <Button

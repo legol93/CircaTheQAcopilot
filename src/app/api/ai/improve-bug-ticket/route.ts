@@ -10,26 +10,8 @@ const RequestSchema = z.object({
   expectedResult: z.string().min(1),
 });
 
-const SYSTEM_PROMPT = `You are a senior QA engineer improving a bug ticket. Make it clearer, more specific, and easier for a developer to understand and fix.
-
-Improve:
-1. Title: make it specific and descriptive (include the affected feature/area)
-2. Steps to Reproduce: make steps atomic, numbered, specific (include exact URLs, buttons, data if mentioned)
-3. Actual Result: be precise about what happens (include error messages, visual issues)
-4. Expected Result: be specific about the correct behavior
-
-Output ONLY valid JSON:
-{
-  "title": "improved title",
-  "stepsToReproduce": "improved steps (keep numbered format)",
-  "actualResult": "improved actual result (keep bullet format)",
-  "expectedResult": "improved expected result (keep bullet format)"
-}
-
-Rules:
-- Keep the original intent, don't invent new information
-- Use professional QA language
-- Be concise but thorough`;
+const SYSTEM_PROMPT = `Senior QA engineer. Improve bug ticket: title (specific, include feature/area), steps (atomic, numbered, exact), actual result (precise, errors), expected result (specific behavior).
+Output JSON only: {title, stepsToReproduce, actualResult, expectedResult}. Keep original intent, professional language, concise.`;
 
 export async function POST(request: Request) {
   try {
@@ -48,9 +30,9 @@ export async function POST(request: Request) {
     const anthropic = new Anthropic();
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 2000,
+      max_tokens: 1000,
       temperature: 0.3,
-      system: SYSTEM_PROMPT,
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
       messages: [{
         role: "user",
         content: `Title: ${parsed.data.title}\n\nSteps to Reproduce:\n${parsed.data.stepsToReproduce}\n\nActual Result:\n${parsed.data.actualResult}\n\nExpected Result:\n${parsed.data.expectedResult}\n\nImprove this bug ticket.`,
