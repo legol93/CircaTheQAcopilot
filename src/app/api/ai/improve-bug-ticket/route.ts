@@ -56,18 +56,41 @@ export async function POST(request: Request) {
       rawText = rawText.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
     }
 
-    const ImprovedSchema = z.object({
-      title: z.string().min(1),
-      stepsToReproduce: z.string().min(1),
-      actualResult: z.string().min(1),
-      expectedResult: z.string().min(1),
-    });
-
-    const parsed_improved = ImprovedSchema.safeParse(JSON.parse(rawText));
-    if (!parsed_improved.success) {
-      return NextResponse.json({ error: "AI response failed validation" }, { status: 500 });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let parsed_json: any;
+    try {
+      parsed_json = JSON.parse(rawText);
+    } catch {
+      return NextResponse.json(
+        { error: "AI returned invalid JSON" },
+        { status: 500 },
+      );
     }
-    const improved = parsed_improved.data;
+
+    // Normalize keys — Claude may return camelCase or snake_case
+    const improved = {
+      title: parsed_json.title ?? "",
+      stepsToReproduce:
+        parsed_json.stepsToReproduce ??
+        parsed_json.steps_to_reproduce ??
+        parsed_json.steps ??
+        "",
+      actualResult:
+        parsed_json.actualResult ??
+        parsed_json.actual_result ??
+        "",
+      expectedResult:
+        parsed_json.expectedResult ??
+        parsed_json.expected_result ??
+        "",
+    };
+
+    if (!improved.title || !improved.stepsToReproduce || !improved.actualResult || !improved.expectedResult) {
+      return NextResponse.json(
+        { error: "AI response missing required fields" },
+        { status: 500 },
+      );
+    }
 
     // Log usage
     const totalTokens = (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0);
