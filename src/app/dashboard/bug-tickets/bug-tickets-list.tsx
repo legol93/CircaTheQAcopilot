@@ -412,6 +412,52 @@ function CreateBugDialog({
       );
     }
 
+    // Auto-create Jira sub-task for "related_ticket" with a parent Jira key
+    if (bugType === "related_ticket" && jiraKey.trim()) {
+      const severityToJiraPriority: Record<string, string> = {
+        critical: "Highest",
+        high: "High",
+        medium: "Medium",
+        low: "Low",
+      };
+      const jiraPriority = severityToJiraPriority[severity] ?? "Medium";
+      const jiraTitle = `[Story Bug][${environment}] ${title.trim()}`;
+      const jiraLabels = [
+        "story-bug",
+        environment.toLowerCase(),
+        `priority-${jiraPriority.toLowerCase()}`,
+        "circa-qa",
+      ];
+
+      try {
+        const jiraRes = await fetch("/api/jira/create-ticket", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ticketType: "story_bug",
+            parentTicketKey: jiraKey.trim().toUpperCase(),
+            environment,
+            reporterName: user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "",
+            reporterEmail: user.email ?? "",
+            title: jiraTitle,
+            description,
+            priority: jiraPriority,
+            labels: jiraLabels,
+            bugTicketId: inserted.id,
+            projectId,
+          }),
+        });
+
+        if (!jiraRes.ok) {
+          const body = await jiraRes.json().catch(() => ({}));
+          console.error("Jira auto-create failed:", body.error);
+          // Don't block — bug ticket is already saved locally
+        }
+      } catch {
+        // Jira creation is best-effort; local bug ticket is already saved
+      }
+    }
+
     setOpen(false);
     resetForm();
     setLoading(false);
