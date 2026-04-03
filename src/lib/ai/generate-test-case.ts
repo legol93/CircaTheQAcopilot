@@ -103,8 +103,15 @@ Generate a test case.`;
     throw new Error(`Failed to parse AI response as JSON: ${rawText.slice(0, 200)}`);
   }
 
+  // Normalize fields before validation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const obj = parsed as any;
+  if (Array.isArray(obj.preconditions)) {
+    obj.preconditions = obj.preconditions.join("\n");
+  }
+
   // Validate with Zod
-  const result = GeneratedTestCaseSchema.safeParse(parsed);
+  const result = GeneratedTestCaseSchema.safeParse(obj);
   if (!result.success) {
     throw new Error(
       `AI response failed validation: ${JSON.stringify(result.error.issues, null, 2)}`,
