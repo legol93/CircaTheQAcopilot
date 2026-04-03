@@ -17,7 +17,7 @@ import {
   FileText,
   ExternalLink,
 } from "lucide-react";
-import type { TestResult } from "./page";
+import type { TestResult, FailureDetail } from "./page";
 
 interface RunInfo {
   id: number;
@@ -290,12 +290,41 @@ export function RunDetail({ run, tests, summary }: RunDetailProps) {
                 />
               </button>
 
-              {expandedTests.has(idx) && test.file && (
-                <div className="mt-3 rounded-md bg-muted/50 p-3">
-                  <p className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground">
-                    <FileText className="h-3 w-3" />
-                    {test.file}
-                  </p>
+              {expandedTests.has(idx) && (
+                <div className="mt-3 space-y-2">
+                  {test.file && (
+                    <div className="rounded-md bg-muted/50 p-3">
+                      <p className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground">
+                        <FileText className="h-3 w-3" />
+                        {test.file}
+                      </p>
+                    </div>
+                  )}
+                  {test.errors && test.errors.length > 0 && (
+                    <div className="space-y-2">
+                      {test.errors.map((err, errIdx) => (
+                        <div
+                          key={errIdx}
+                          className="rounded-md border border-red-200 bg-red-50/50 p-3 dark:border-red-900/50 dark:bg-red-950/20"
+                        >
+                          <p className="flex items-center gap-1.5 text-xs font-mono text-red-600 dark:text-red-400">
+                            <XCircle className="h-3 w-3 shrink-0" />
+                            {err.file}:{err.line}
+                          </p>
+                          <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-xs text-muted-foreground">
+                            {err.message}
+                          </pre>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {!test.file && (!test.errors || test.errors.length === 0) && (
+                    <div className="rounded-md bg-muted/50 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        No additional details available
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

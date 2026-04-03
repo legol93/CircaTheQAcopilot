@@ -1,12 +1,19 @@
 import { notFound } from "next/navigation";
 import { RunDetail } from "./run-detail";
 
+export interface FailureDetail {
+  message: string;
+  file: string;
+  line: number;
+}
+
 export interface TestResult {
   name: string;
   status: "passed" | "failed" | "flaky";
   duration?: string;
   retries?: number;
   file?: string;
+  errors?: FailureDetail[];
 }
 
 interface RunInfo {
@@ -126,8 +133,6 @@ async function fetchRunDetail(runId: string) {
       }
     }
 
-    // Note: individual failure annotations are duplicated per retry attempt
-    // so we don't use them for retry counts (data not reliable from API)
   }
 
   // Parse slow test annotations for duration
@@ -139,6 +144,40 @@ async function fetchRunDetail(runId: string) {
         const existing = tests.find((t) => t.file === fileMatch[1]);
         if (existing && durationMatch) {
           existing.duration = durationMatch[1];
+        }
+      }
+    }
+  }
+
+  // Parse individual failure/warning annotations for step-level error details
+  for (const ann of annotations) {
+    if (
+      ann.annotation_level === "failure" ||
+      ann.annotation_level === "warning"
+    ) {
+      // Skip summary and slow test annotations
+      if (
+        ann.title?.includes("Playwright Run Summary") ||
+        ann.title === "Slow Test"
+      )
+        continue;
+
+      const title: string = ann.title ?? "";
+      const message: string = ann.message ?? "";
+      const filePath: string = ann.path ?? "";
+      const line: number = ann.start_line ?? 0;
+
+      // Match annotation to an existing test by file path in the title
+      // Title format: "tests/file.spec.js:92:7 › Suite › Test name"
+      const test = tests.find((t) => t.file && title.includes(t.file));
+      if (test) {
+        if (!test.errors) test.errors = [];
+        // Avoid duplicates (retries produce duplicate annotations)
+        const isDuplicate = test.errors.some(
+          (e) => e.file === filePath && e.line === line && e.message === message
+        );
+        if (!isDuplicate) {
+          test.errors.push({ message, file: filePath, line });
         }
       }
     }
