@@ -175,7 +175,10 @@ export function CreateInJiraDialog({
     if (ticket.expected_result) {
       parts.push(`**Expected Result:**\n${ticket.expected_result}`);
     }
-    if (ticket.description) {
+    if (
+      ticket.description &&
+      !ticket.description.startsWith("**Steps to Reproduce:")
+    ) {
       parts.push(`**Additional Notes:**\n${ticket.description}`);
     }
 

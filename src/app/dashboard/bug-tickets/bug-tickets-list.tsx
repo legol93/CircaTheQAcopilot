@@ -366,14 +366,12 @@ function CreateBugDialog({
       return;
     }
 
-    const description = `**Steps to Reproduce:**\n${stepsToReproduce.trim()}\n\n**Actual Result:**\n${actualResult.trim()}\n\n**Expected Result:**\n${expectedResult.trim()}`;
-
     const { data: inserted, error: insertError } = await supabase
       .from("bug_tickets")
       .insert({
         project_id: projectId,
         title: title.trim(),
-        description,
+        description: null,
         bug_type: bugType,
         environment,
         severity,
@@ -429,6 +427,8 @@ function CreateBugDialog({
         "circa-qa",
       ];
 
+      const jiraDescription = `**Steps to Reproduce:**\n${stepsToReproduce.trim()}\n\n**Actual Result:**\n${actualResult.trim()}\n\n**Expected Result:**\n${expectedResult.trim()}`;
+
       try {
         const jiraRes = await fetch("/api/jira/create-ticket", {
           method: "POST",
@@ -440,7 +440,7 @@ function CreateBugDialog({
             reporterName: user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "",
             reporterEmail: user.email ?? "",
             title: jiraTitle,
-            description,
+            description: jiraDescription,
             priority: jiraPriority,
             labels: jiraLabels,
             bugTicketId: inserted.id,
