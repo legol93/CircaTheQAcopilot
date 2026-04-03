@@ -368,32 +368,54 @@ function CreateBugDialog({
 
     const description = `**Steps to Reproduce:**\n${stepsToReproduce.trim()}\n\n**Actual Result:**\n${actualResult.trim()}\n\n**Expected Result:**\n${expectedResult.trim()}`;
 
-    const { error: insertError } = await supabase.from("bug_tickets").insert({
-      project_id: projectId,
-      title: title.trim(),
-      description,
-      bug_type: bugType,
-      environment,
-      severity,
-      status: "open",
-      steps_to_reproduce: stepsToReproduce.trim(),
-      actual_result: actualResult.trim(),
-      expected_result: expectedResult.trim(),
-      labels: labels.trim() || null,
-      jira_key: jiraKey.trim() || null,
-      jira_url: jiraKey.trim() ? `https://circathera.atlassian.net/browse/${jiraKey.trim()}` : null,
-      created_by: user.id,
-    });
+    const { data: inserted, error: insertError } = await supabase
+      .from("bug_tickets")
+      .insert({
+        project_id: projectId,
+        title: title.trim(),
+        description,
+        bug_type: bugType,
+        environment,
+        severity,
+        status: "open",
+        steps_to_reproduce: stepsToReproduce.trim(),
+        actual_result: actualResult.trim(),
+        expected_result: expectedResult.trim(),
+        labels: labels.trim() || null,
+        jira_key: jiraKey.trim() || null,
+        jira_url: jiraKey.trim() ? `https://circathera.atlassian.net/browse/${jiraKey.trim()}` : null,
+        created_by: user.id,
+      })
+      .select("id")
+      .single();
 
-    if (insertError) {
-      setError(insertError.message);
+    if (insertError || !inserted) {
+      setError(insertError?.message ?? "Failed to create bug ticket");
       setLoading(false);
-    } else {
-      setOpen(false);
-      resetForm();
-      setLoading(false);
-      onCreated();
+      return;
     }
+
+    // Parse steps text into individual rows in bug_ticket_steps
+    const stepLines = stepsToReproduce
+      .trim()
+      .split("\n")
+      .map((line) => line.replace(/^\s*\d+[\.\)\-]\s*/, "").trim())
+      .filter((line) => line.length > 0);
+
+    if (stepLines.length > 0) {
+      await supabase.from("bug_ticket_steps").insert(
+        stepLines.map((desc, i) => ({
+          bug_ticket_id: inserted.id,
+          step_number: i + 1,
+          description: desc,
+        })),
+      );
+    }
+
+    setOpen(false);
+    resetForm();
+    setLoading(false);
+    onCreated();
   }
 
   return (
