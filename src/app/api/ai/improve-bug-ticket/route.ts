@@ -5,9 +5,9 @@ import { z } from "zod/v4";
 
 const RequestSchema = z.object({
   title: z.string().min(1),
-  stepsToReproduce: z.string().min(1),
-  actualResult: z.string().min(1),
-  expectedResult: z.string().min(1),
+  stepsToReproduce: z.string().optional().default(""),
+  actualResult: z.string().optional().default(""),
+  expectedResult: z.string().optional().default(""),
 });
 
 const SYSTEM_PROMPT = `Senior QA engineer. Improve bug ticket: title (specific, include feature/area), steps (atomic, numbered, exact), actual result (precise, errors), expected result (specific behavior).

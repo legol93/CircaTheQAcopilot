@@ -123,7 +123,10 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
   }
 
   async function handleImproveWithAI() {
-    if (!ticket.steps_to_reproduce || !ticket.actual_result || !ticket.expected_result) return;
+    const stepsSource = ticket.steps_to_reproduce || ticket.description || "";
+    const actualSource = ticket.actual_result || "";
+    const expectedSource = ticket.expected_result || "";
+    if (!stepsSource && !actualSource && !expectedSource) return;
     setImproving(true);
     setError(null);
     try {
@@ -132,9 +135,9 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: ticket.title,
-          stepsToReproduce: ticket.steps_to_reproduce,
-          actualResult: ticket.actual_result,
-          expectedResult: ticket.expected_result,
+          stepsToReproduce: stepsSource,
+          actualResult: actualSource,
+          expectedResult: expectedSource,
         }),
       });
       const data = await res.json();
@@ -184,7 +187,7 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
             variant="outline"
             size="sm"
             onClick={handleImproveWithAI}
-            disabled={improving || !ticket.steps_to_reproduce}
+            disabled={improving || (!ticket.steps_to_reproduce && !ticket.description && !ticket.actual_result)}
             className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50"
           >
             {improving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
