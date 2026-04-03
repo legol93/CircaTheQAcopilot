@@ -143,13 +143,15 @@ export async function POST(request: Request) {
       `${connection.api_email}:${connection.api_token}`,
     ).toString("base64");
 
+    const jiraHeaders = {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+
     const jiraRes = await fetch(`${siteUrl}/rest/api/3/issue`, {
       method: "POST",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+      headers: jiraHeaders,
       body: JSON.stringify({ fields }),
     });
 
@@ -169,6 +171,13 @@ export async function POST(request: Request) {
     const jiraData = await jiraRes.json();
     const issueKey = jiraData.key as string;
     const issueUrl = `${siteUrl}/browse/${issueKey}`;
+
+    // 6b. Update description separately to bypass Jira template override
+    await fetch(`${siteUrl}/rest/api/3/issue/${issueKey}`, {
+      method: "PUT",
+      headers: jiraHeaders,
+      body: JSON.stringify({ fields: { description: adfDescription } }),
+    });
 
     // 7. Update bug_tickets row with jira_key and jira_url
     const { error: updateError } = await supabase
