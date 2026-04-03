@@ -50,6 +50,12 @@ export async function POST(request: Request) {
       text: `Test Case: ${testTitle}\n\nSteps to verify:\n${stepsText}${notes ? `\n\nAdditional context: ${notes}` : ""}\n\nAnalyze the uploaded screenshots against these test steps. What passes, what fails?`,
     });
 
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: "ANTHROPIC_API_KEY is not configured on the server" },
+        { status: 503 },
+      );
+    }
     const anthropic = new Anthropic();
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",

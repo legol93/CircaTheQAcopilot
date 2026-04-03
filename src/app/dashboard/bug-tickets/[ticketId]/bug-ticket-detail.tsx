@@ -137,8 +137,8 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
           expectedResult: ticket.expected_result,
         }),
       });
-      if (!res.ok) throw new Error("AI improvement failed");
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "AI improvement failed");
 
       // Save all improved fields
       const updates: Record<string, string> = {};
@@ -149,8 +149,8 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
 
       await supabase.from("bug_tickets").update(updates).eq("id", ticket.id);
       setTicket((prev) => ({ ...prev, ...updates }));
-    } catch {
-      setError("Failed to improve with AI");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to improve with AI");
     } finally {
       setImproving(false);
     }

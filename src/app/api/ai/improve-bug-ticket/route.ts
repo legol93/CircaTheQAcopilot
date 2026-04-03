@@ -27,6 +27,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: "ANTHROPIC_API_KEY is not configured on the server" },
+        { status: 503 },
+      );
+    }
+
     const anthropic = new Anthropic();
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",

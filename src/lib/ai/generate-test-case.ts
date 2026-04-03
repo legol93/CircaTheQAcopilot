@@ -59,6 +59,9 @@ export async function generateTestCase(
   issueType: string,
   priority: string,
 ): Promise<GeneratedTestCase> {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error("ANTHROPIC_API_KEY is not configured on the server");
+  }
   const anthropic = new Anthropic();
 
   const mappedPriority = mapJiraPriority(priority);
