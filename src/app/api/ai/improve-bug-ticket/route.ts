@@ -67,22 +67,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // Normalize keys — Claude may return camelCase or snake_case
+    // Normalize keys and types — Claude may return camelCase, snake_case, or arrays
+    function toStr(val: unknown): string {
+      if (Array.isArray(val)) return val.join("\n");
+      if (typeof val === "string") return val;
+      return "";
+    }
+
     const improved = {
-      title: parsed_json.title ?? "",
-      stepsToReproduce:
+      title: toStr(parsed_json.title),
+      stepsToReproduce: toStr(
         parsed_json.stepsToReproduce ??
         parsed_json.steps_to_reproduce ??
-        parsed_json.steps ??
-        "",
-      actualResult:
+        parsed_json.steps,
+      ),
+      actualResult: toStr(
         parsed_json.actualResult ??
-        parsed_json.actual_result ??
-        "",
-      expectedResult:
+        parsed_json.actual_result,
+      ),
+      expectedResult: toStr(
         parsed_json.expectedResult ??
-        parsed_json.expected_result ??
-        "",
+        parsed_json.expected_result,
+      ),
     };
 
     if (!improved.title || !improved.stepsToReproduce || !improved.actualResult || !improved.expectedResult) {
