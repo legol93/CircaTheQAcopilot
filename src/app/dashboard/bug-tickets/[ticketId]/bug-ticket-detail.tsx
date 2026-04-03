@@ -75,6 +75,7 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [jiraDialogOpen, setJiraDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stepsKey, setStepsKey] = useState(0);
   const router = useRouter();
   const supabase = createClient();
 
@@ -143,7 +144,7 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "AI improvement failed");
 
-      // Save all improved fields
+      // Save improved text fields
       const updates: Record<string, string> = {};
       if (data.title) updates.title = data.title;
       if (data.stepsToReproduce) updates.steps_to_reproduce = data.stepsToReproduce;
@@ -152,6 +153,33 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
 
       await supabase.from("bug_tickets").update(updates).eq("id", ticket.id);
       setTicket((prev) => ({ ...prev, ...updates }));
+
+      // Parse steps into individual rows in bug_ticket_steps
+      if (data.stepsToReproduce) {
+        const stepLines = data.stepsToReproduce
+          .split("\n")
+          .map((line: string) => line.replace(/^\s*\d+[\.\)\-]\s*/, "").trim())
+          .filter((line: string) => line.length > 0);
+
+        if (stepLines.length > 0) {
+          // Clear existing steps
+          await supabase
+            .from("bug_ticket_steps")
+            .delete()
+            .eq("bug_ticket_id", ticket.id);
+
+          // Insert new steps
+          const rows = stepLines.map((desc: string, i: number) => ({
+            bug_ticket_id: ticket.id,
+            step_number: i + 1,
+            description: desc,
+          }));
+          await supabase.from("bug_ticket_steps").insert(rows);
+
+          // Force BugStepsEditor to re-fetch
+          setStepsKey((k) => k + 1);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to improve with AI");
     } finally {
@@ -282,7 +310,7 @@ export function BugTicketDetail({ ticket: initial }: { ticket: Ticket }) {
 
       {/* Content sections */}
       <div className="mt-6 grid gap-4">
-        <BugStepsEditor bugTicketId={ticket.id} />
+        <BugStepsEditor key={stepsKey} bugTicketId={ticket.id} />
         <div className="grid gap-4 lg:grid-cols-2">
           <EditableCard
             title="Actual Result"
