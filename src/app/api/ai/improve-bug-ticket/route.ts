@@ -82,6 +82,7 @@ export async function POST(request: Request) {
     return NextResponse.json(improved);
   } catch (error) {
     console.error("improve-bug-ticket error:", error);
-    return NextResponse.json({ error: "Failed to improve bug ticket" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Failed to improve bug ticket";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
